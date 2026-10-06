@@ -20,7 +20,7 @@ timeline
 ## 詳細階段目標
 
 ### 第一階段：萌蛋育嬰原型（PoC，1~2 週）
-- [x] 建立 Larch 專案基底（名稱：`王子姬 (Prince & Princess)`，ID: `project-6516bec7-4053-4a7c-a45e-2d739be40b12`）。
+- [x] 建立 Larch 專案基底（名稱：`王子姬 Prince Hime`，ID: `project-6516bec7-4053-4a7c-a45e-2d739be40b12`）。
 - [ ] 繪製或選定「萌蛋」與「幼兒期糰子」的 16px/32px 行走圖與立繪。
 - [ ] 搭建第 1 張地圖「皇家育嬰室（Nursery）」（設定為 `soloMaps`）。
 - [ ] 實現 3 項電子雞核心循環：
