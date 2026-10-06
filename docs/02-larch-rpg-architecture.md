@@ -43,8 +43,14 @@ flowchart TD
     AdultForm --> GrandArena["踏入王城廣場 (線上多人地圖)"]
 ```
 
-### 1. 育嬰室私密空間 (`soloMaps`)
-- 將育嬰室地圖加入 `online.soloMaps`，這樣其他連線玩家不會誤闖你的育嬰房，保持養寵物的私密安寧。
+### 1. 育嬰室私密空間 (`soloMaps`) 與手繪童話大圖地圖 (`settings.picture`)
+- **告別生硬方塊拼貼**：官方內建的磁磚（如 Kenney 16px 拼貼）稜角分明、網格感過重。本作全面改用 **Larch 原生支援的「整張手繪插畫底圖（Painted Map）」** 技術：
+  - 地圖設定：`settings: { picture: { url: "https://.../nursery_watercolor.webp" } }`。
+  - 將一整幅高解析度、柔和手繪童話水彩畫鋪在所有圖層最底層。
+  - 阻擋牆壁與家具邊界時，使用隱藏碰撞層（`visible: false, collision: true`），完全不畫死板的方塊磚，視覺上只有一幅無縫柔和的繪本插畫！
+  - 走動時主角在整張溫潤的手繪木地板、蓬鬆雲朵毛毯上歡快彈跳，絲毫沒有網格與硬切角的違和感。
+- **私密隔離**：將育嬰室地圖加入 `online.soloMaps`，保持玩家與史萊姆小寵物安寧私密的相處時光。
+
 
 ### 2. 性別與外觀的動態更換 (`hero` 步驟)
 - Larch 的事件步驟 `kind: "hero"` 是動態養成的核心利器：
