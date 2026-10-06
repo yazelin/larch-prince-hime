@@ -35,12 +35,14 @@
 - [02. Larch RPG 技術可行性與連線架構](docs/02-larch-rpg-architecture.md)：單機培育循環實作、線上模式特性與邊界、Duel 決鬥機制、密令聯姻方案。
 - [03. 成長數值與戰鬥技能系統](docs/03-growth-and-combat-spec.md)：四維數值公式、進化分支樹、道具與裝備、技能庫。
 - [04. 開發里程碑與排程規劃](docs/04-roadmap.md)：從極簡單機原型（PoC）到完整多人競技場的分階段推進。
+- [05. 極致療癒童話美術風格指南](docs/05-art-style-guide.md)：**核心視覺規範**——低飽和馬卡龍配色、半透明果凍質感、金平糖黃金便便與 ASMR 級音效環境。
 
 ---
 
 ## 🛠️ 開發與技術棧
 
 - **引擎與執行環境**：[Larch Story Studio](https://larch.ink)（RPG 2.0 模組）
-- **美術風格**：二頭身 Q 版像素 / 精緻賽璐璐立繪（支援 Kenney CC0 擴充與自製圖集）
+- **美術風格**：**極致療癒系繪本童話 × 半透明果凍史萊姆**（柔和暖色調、無銳角、琥珀糖剔透質感）
 - **工具鏈**：Larch MCP Server、Python 腳本批次產圖與資料庫維護
 - **版本庫維護**：`yazelin/larch-prince-hime`
+
