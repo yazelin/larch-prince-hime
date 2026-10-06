@@ -43,6 +43,10 @@ JOBS = {
                    'sleepy kind half-closed eyes, a slightly too big golden crown with rounded ball tips sitting a bit crooked, a tiny red velvet cape with white ermine trim; '
                    'same glossy cute rendering, outline and face style as the slimes in the references, three-quarter view facing the viewer. '
                    'Right: a thick royal diary book, closed, pink leather cover with a small golden crown emblem and a red ribbon bookmark hanging out, slightly angled. ' + GREEN),
+    'sheet-props': (['style'], 'Three separate small game props in a row with wide empty space between them, top-down three-quarter view, same glossy cute rendering as the reference. '
+                    'Left: a round wicker snack basket with a pink gingham cloth, holding a strawberry pudding and a small stack of honey pancakes. '
+                    'Middle: one glowing golden star-shaped konpeito candy, honey-gold, glossy, with a few tiny sparkles, cute and clean (this is the pet\'s golden poop, it must look like candy). '
+                    'Right: a single shiny gold coin with a small crown emblem embossed on it. ' + GREEN),
 }
 
 

@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent;overflow:hidden}</style></head>
+<body>
+<script>
+// 看不見的時鐘：記下最後在場的時間，讀檔或重新進來時算出離開多久，補上離線期間的飢餓與便便。
+// 常數由 build.py 換掉 __X__。
+var OFF_HUNGER_MS = __OFF_HUNGER_MS__, OFF_HUNGER_STEP = __OFF_HUNGER_STEP__, OFF_POOP_MS = __OFF_POOP_MS__, BEAT_MS = __BEAT_MS__;
+var POOPS = ['poop_a', 'poop_b', 'poop_c'];
+var vars = {}, active = false, lastWritten = null, beat = 0;
+
+function set(name, value) { parent.postMessage({ type: 'larch:set', name: name, value: value }, '*'); }
+function truthy(v) { return v === true || v === 'true'; }
+
+function sync() {
+  if (!active || !truthy(vars.intro_done)) return;
+  var now = Date.now(), seen = Number(vars.last_seen) || 0;
+  if (seen === lastWritten) return;               // 自己剛寫的值，不是新的一局或讀檔
+  if (seen > 0 && now > seen) {                    // 讀檔或重新進來：算離開多久
+    var gone = now - seen;
+    var hunger = Math.min(100, (Number(vars.hunger) || 0) + Math.floor(gone / OFF_HUNGER_MS) * OFF_HUNGER_STEP);
+    if (hunger !== Number(vars.hunger)) set('hunger', hunger);
+    var poops = Math.min(POOPS.length, Math.floor(gone / OFF_POOP_MS));
+    for (var i = 0; i < poops; i++) if (!truthy(vars[POOPS[i]])) set(POOPS[i], true);
+    set('away_minutes', Math.floor(gone / 60000));
+  }
+  lastWritten = now; set('last_seen', now);
+}
+
+function heartbeat() {                             // 在場時定時更新最後時間，存檔時就會一起存下來
+  clearInterval(beat);
+  beat = setInterval(function () {
+    if (!active || !truthy(vars.intro_done)) return;
+    lastWritten = Date.now(); set('last_seen', lastWritten);
+  }, BEAT_MS);
+}
+
+addEventListener('message', function (e) {
+  if (e.source !== parent) return;
+  var d = e.data;
+  if (!d || (d.type !== 'larch:hud:init' && d.type !== 'larch:hud:update')) return;
+  vars = d.variables || {};
+  var was = active; active = d.active !== false;
+  if (active && !was) heartbeat();
+  if (!active) clearInterval(beat);
+  sync();
+});
+parent.postMessage({ type: 'larch:ready' }, '*');
+</script>
+</body></html>

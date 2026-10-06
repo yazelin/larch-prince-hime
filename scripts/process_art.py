@@ -30,6 +30,24 @@ def despill(path):
     fixed = path.with_name(path.stem + '-fixed.png'); fixed.replace(path)
 
 
+def cut_sheet(key, outs):
+    """綠幕道具表：去背後依連通區域由左到右切開，各自置中成正方形。"""
+    sheet = RAW / f'{key}.png'
+    if not sheet.exists(): print('缺', key); return
+    cut = RAW / f'{key}-cut.png'
+    subprocess.run([sys.executable, str(CUT), 'key', str(sheet), '-o', str(cut)], check=True, capture_output=True)
+    print(subprocess.run([sys.executable, str(CUT), 'check', str(cut), '--key', 'green'], capture_output=True, text=True).stdout.splitlines()[-3:])
+    im = Image.open(cut); a = np.asarray(im)
+    lab, n = ndimage.label(ndimage.binary_dilation(a[..., 3] > 10, iterations=12))   # 膨脹後再分群，閃光碎點併進主體
+    big = sorted(range(1, n + 1), key=lambda i: -(lab == i).sum())[:len(outs)]
+    for i, (name, size) in zip(sorted(big, key=lambda i: np.where(lab == i)[1].mean()), outs):
+        ys, xs = np.where(lab == i)
+        part = Image.fromarray(np.where((lab == i)[..., None], a, 0).astype(np.uint8), 'RGBA').crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+        o = OUT / name; o.parent.mkdir(parents=True, exist_ok=True)
+        tmp = o.with_suffix('.png'); resize_pm(square(part), (size, size)).save(tmp); despill(tmp)
+        Image.open(tmp).save(o, quality=90); tmp.unlink(); print('ok', name)
+
+
 def main():
     for k, dst in WIDE.items():
         src = RAW / f'{k}.png'
@@ -53,6 +71,7 @@ def main():
             if size: part = resize_pm(square(part), (size, size))
             o = OUT / name; o.parent.mkdir(parents=True, exist_ok=True); part.save(o); despill(o)
             w = o.with_suffix('.webp'); Image.open(o).save(w, quality=90); o.unlink(); print('ok', w.name, part.size)   # 帶透明的 webp，比 png 小很多
+    cut_sheet('sheet-props', [('props/basket.webp', 256), ('props/poop.webp', 128), ('props/coin.webp', 128)])
     slime = ROOT / 'assets/concept/sprite-test-daily.webp'
     o = OUT / 'walk/slime-daily.png'; o.parent.mkdir(parents=True, exist_ok=True)
     resize_pm(Image.open(slime), (128, 128)).save(o); despill(o)
