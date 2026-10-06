@@ -67,9 +67,10 @@
 | 裝備 ID | 裝備名稱 | 槽位 | 普攻型態 | 屬性加成 | 附帶習得技能 |
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | `gear_halberd_fangtian` | **方天戟** | `weapon` | `slash` | 物理攻擊力 +95<br/>暴擊率 +15% | `skill_wushuang_strike` (無雙破陣斬：橫掃大範圍敵人，附帶重擊退) |
-| `gear_guandao_crescent` | **偃月刀** | `weapon` | `slash` | 物理攻擊力 +90<br/>物理防禦 +20<br/>尊貴度 +15 | `skill_warm_wine_slash` (溫酒破陣斬：蓄力直線重劈破甲，青龍刀芒必暴擊) |
-| `gear_spear_snake` | **丈八蛇矛** | `weapon` | `slash` | 物理攻擊力 +88<br/>冷卻縮減 (CDR) +15%<br/>嬌貴度 +15 | `skill_yanren_roar_thrust` (燕人雷霆刺：如游蛇高速連環突刺，怒吼威壓擊退) |
+| `gear_guandao_crescent` | **偃月刀**<br/>(《咒泉·三結義》) | `weapon` | `slash` | 物理攻擊力 +90<br/>物理防禦 +20<br/>尊貴度 +15 | `skill_warm_wine_slash` (溫酒破陣斬：柄截短、刀削薄的新月刀，蓄力重劈破甲且必暴擊) |
+| `gear_spear_snake` | **丈八蛇矛**<br/>(《咒泉·三結義》) | `weapon` | `slash` | 物理攻擊力 +88<br/>冷卻縮減 (CDR) +15%<br/>嬌貴度 +15 | `skill_yanren_roar_thrust` (燕人雷霆刺：矛桿截短調校，如游蛇高速連環突刺與雷吼擊退) |
 | `gear_robe_moonlight` | **月光服** | `armor` | - | 物理防禦 +65<br/>MP 上限 +40<br/>閃避率 +20% | `skill_luoshen_aegis` (洛神凌波步：被攻擊時有 35% 機率完全化水虛無避開傷害) |
+
 
 
 ### 3. 日常電子雞飲食與照料道具
