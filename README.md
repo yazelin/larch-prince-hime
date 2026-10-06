@@ -36,9 +36,18 @@
 - [02. Larch RPG 技術可行性與連線架構](docs/02-larch-rpg-architecture.md)：單機培育循環實作、線上模式特性與邊界、Duel 決鬥機制、密令聯姻方案。
 - [03. 成長數值與戰鬥技能系統](docs/03-growth-and-combat-spec.md)：四維數值公式、進化分支樹、道具與裝備、技能庫。
 - [04. 開發里程碑與排程規劃](docs/04-roadmap.md)：從極簡單機原型（PoC）到完整多人競技場的分階段推進。
-- [05. 極致療癒童話美術風格指南](docs/05-art-style-guide.md)：**核心視覺規範**——低飽和馬卡龍配色、半透明果凍質感、金平糖黃金便便與 ASMR 級音效環境。
+- [05. 極致療癒童話美術風格指南](docs/05-art-style-guide.md)：核心視覺規範：開頭是 2026-10-06 的拍板節（奶白不透明果凍小人、透明感只放大圖），下文是馬卡龍配色、金平糖黃金便便與音效環境。
 
 ---
+
+## 序章（本機預覽）
+
+    python3 scripts/gen_art.py            # 產序章美術到 art/raw/（已存在就跳過；art/raw 不進 git）
+    python3 scripts/process_art.py        # 後製到 assets/art/：背景 1920×1080、國王與日誌去背、小人 128px
+    python3 scripts/build.py              # 組出 dist/project.json（劇本寫在 build.py 裡）
+    python3 ~/larch-preview/serve.py dist/project.json
+
+標題畫面兩顆鈕：「王子姬的故事」從序章開始；「回到培育室」讀最近的存檔（Larch 沒有自動存檔，序章最後會帶玩家去王室日誌存第一次）。
 
 ## 🛠️ 開發與技術棧
 

@@ -1,0 +1,50 @@
+{
+ "schemaVersion": 1,
+ "id": "project-6516bec7-4053-4a7c-a45e-2d739be40b12",
+ "name": "王子姬 Prince Hime",
+ "description": "",
+ "locale": "zh-Hant",
+ "languages": [
+  {
+   "code": "zh-Hant",
+   "label": "繁體中文"
+  }
+ ],
+ "nodes": [],
+ "edges": [],
+ "media": [],
+ "variables": [],
+ "characters": [],
+ "settings": {
+  "resolution": {
+   "width": 1920,
+   "height": 1080
+  },
+  "textSpeed": 32,
+  "typingEffect": true,
+  "autoAdvanceDelay": 1800,
+  "showRpgHud": false,
+  "aiMode": "authored",
+  "aiDirectorAllowPlayerInput": true,
+  "aiDirectorMediaScope": "board-only",
+  "aiDirectorAllowImprovisation": true,
+  "aiDirectorUseBgm": true,
+  "plugins": {
+   "larch-rpg-system": {
+    "enabled": true,
+    "settings": {}
+   }
+  }
+ },
+ "boards": [
+  {
+   "id": "main",
+   "name": "王子姬",
+   "description": "",
+   "kind": "story",
+   "nodes": [],
+   "edges": []
+  }
+ ],
+ "activeBoardId": "main"
+}
