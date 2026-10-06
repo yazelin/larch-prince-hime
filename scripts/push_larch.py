@@ -8,6 +8,7 @@ API = f'https://larch.ink/api/agent/projects/{PID}'
 KEY = open(os.path.expanduser('~/.config/larch/key')).read().strip()
 # 只由產生器負責的設定鍵；其他設定（名稱、介紹、作者在網頁上調的）保留線上的
 OWNED_SETTINGS = ['titleCoverImage', 'projectThumbnail', 'stageFit', 'keepActorsInFrame', 'titleScreenEnabled', 'titleScreen']
+OWNED_PLUGINS = ['larch-rpg-system', 'prince-hime']   # 產生器整份負責的插件設定（RPG 系統、時鐘 HUD）
 
 
 def git(*a): return subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
@@ -48,7 +49,7 @@ def main(summary):
     p = json.loads(json.dumps(live))
     for k in ('boards', 'nodes', 'edges', 'variables', 'activeBoardId'): p[k] = built[k]
     for k in OWNED_SETTINGS: p['settings'][k] = built['settings'][k]
-    p['settings'].setdefault('plugins', {})['larch-rpg-system'] = built['settings']['plugins']['larch-rpg-system']
+    for k in OWNED_PLUGINS: p['settings'].setdefault('plugins', {})[k] = built['settings']['plugins'][k]
     req('PUT', {'project': p, 'summary': summary}, etag)
 
     _, q = req('GET'); q = q.get('project', q)
@@ -57,7 +58,7 @@ def main(summary):
     for b in built['boards']:
         assert c(qb[b['id']]['nodes']) == c(b['nodes']) and c(qb[b['id']]['edges']) == c(b['edges']), f'白板 {b["id"]} 讀回來不一樣'
     for k in OWNED_SETTINGS: assert c(q['settings'].get(k)) == c(built['settings'][k]), k
-    assert c(q['settings']['plugins']['larch-rpg-system']) == c(built['settings']['plugins']['larch-rpg-system']), 'RPG 設定'
+    for k in OWNED_PLUGINS: assert c(q['settings']['plugins'].get(k)) == c(built['settings']['plugins'][k]), f'插件設定 {k}'
     for k in ('name', 'description'): assert c(q.get(k)) == c(live.get(k)), f'{k} 被改到了'
     print('OK 推上 Larch：', len(built['nodes']), '張卡，讀回比對一致')
 
