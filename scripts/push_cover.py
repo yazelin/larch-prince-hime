@@ -21,7 +21,7 @@ time.sleep(4)
 canon=lambda x: json.dumps(x,ensure_ascii=False,sort_keys=True)
 et,p=req('GET'); p=p.get('project',p)
 json.dump(p,open(f'snapshots/cover_{int(time.time())}.json','w'),ensure_ascii=False)
-boards=json.loads(json.dumps(p.get('boards') or [])); keep={k:canon(p.get(k)) for k in ('characters','variables','languages','name','description','nodes','edges')}  # ponytail: 舊格式專案沒有 boards，nodes/edges 一起比對; pl=canon(p['settings'].get('plugins'))
+boards=json.loads(json.dumps(p.get('boards') or [])); keep={k:canon(p.get(k)) for k in ('characters','variables','languages','name','description','nodes','edges')}; pl=canon(p['settings'].get('plugins'))  # ponytail: 舊格式專案沒有 boards，nodes/edges 一起比對
 if which in ('both','cover'): p['settings']['titleCoverImage']=url
 if which in ('both','thumb'): p['settings']['projectThumbnail']=url
 et,_=req('PUT','',{"project":p,"summary":summary},et)
