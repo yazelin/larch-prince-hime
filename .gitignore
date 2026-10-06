@@ -1,0 +1,10 @@
+# Python / Node / Temporary files
+__pycache__/
+*.pyc
+.env
+*.log
+.DS_Store
+
+# Local backups
+*.bak
+snapshot/
