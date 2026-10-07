@@ -14,12 +14,12 @@ OWNED_PLUGINS = ['larch-rpg-system', 'prince-hime']   # 產生器整份負責的
 def git(*a): return subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
 
 
-def req(method, body=None, etag=None):
+def req(method, body=None, etag=None, path=''):
     h = {'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json'}
     if etag: h['If-Match'] = etag
     for _ in range(8):
         try:
-            r = urllib.request.urlopen(urllib.request.Request(API, method=method, headers=h,
+            r = urllib.request.urlopen(urllib.request.Request(API + path, method=method, headers=h,
                                        data=json.dumps(body).encode() if body is not None else None), timeout=300)
             return r.headers.get('ETag'), json.loads(r.read() or b'{}')
         except urllib.error.HTTPError as e:
@@ -50,7 +50,10 @@ def main(summary):
     for k in ('boards', 'nodes', 'edges', 'variables', 'activeBoardId'): p[k] = built[k]
     for k in OWNED_SETTINGS: p['settings'][k] = built['settings'][k]
     for k in OWNED_PLUGINS: p['settings'].setdefault('plugins', {})[k] = built['settings']['plugins'][k]
-    req('PUT', {'project': p, 'summary': summary}, etag)
+    etag, _ = req('PUT', {'project': p, 'summary': summary}, etag)
+    # 整包 PUT 會把同一出口的多條連線去重（開機分流就是兩條），白板一定要再用 PUT board 整張覆蓋一次
+    for b in built['boards']:
+        etag, _ = req('PUT', {'name': b['name'], 'nodes': b['nodes'], 'edges': b['edges'], 'summary': summary + '（白板）'}, etag, f'/boards/{b["id"]}')
 
     _, q = req('GET'); q = q.get('project', q)
     c = lambda x: json.dumps(x, ensure_ascii=False, sort_keys=True)

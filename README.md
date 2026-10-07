@@ -47,21 +47,22 @@
     python3 scripts/build.py              # 組出 dist/project.json（劇本寫在 build.py 裡）
     python3 ~/larch-preview/serve.py dist/project.json
 
-標題畫面兩顆鈕：「王子姬的故事」從序章開始；「回到培育室」讀最近的存檔（Larch 沒有自動存檔，序章最後會帶玩家去王室日誌存第一次）。
+標題畫面只有「進入王宮」：沒領養過就播序章，領養過直接進培育室（起點是「開機分流」卡，看 `intro_done`）。
+
+**不用存檔**：寵物的狀態都是跨週目變數（Larch「玩家變數 → 跨週目保留」，`build.py` 的 `PERSIST`），關掉再開就接著養。選單拿掉了存檔與讀檔，避免讀舊檔跟跨週目的值打架。王室日誌看狀態，也可以重看序章或重新領養（全部歸零）。跨週目的值存在玩家那台裝置（訪客）；登入帳號會不會跨裝置同步還沒驗證。
 
 ## 培育室的照顧循環
 
 - 開著遊戲時每 30 秒餓一點（頭上冒飯碗）；點心籃餵食，玩具箱玩耍（加親密、也會餓）。
 - 黃金便便：三個固定位置每 40 秒隨機冒一坨，走過去就撿起來換王室金幣。
-- 照顧滿三次，牠會問要不要寫日誌；日誌會顯示飽足與親密度。
-- 離開多久：看不見的時鐘 HUD（`scripts/plugin/clock.html`，寫在 `settings.plugins.prince-hime.playback`，玩家不必安裝）每分鐘記下最後在場時間，讀檔時補上離線的飢餓與便便。反應分四段：1 小時內沒反應、1–8 小時「你回來了！」、8 小時–3 天鬧脾氣（餵了就和好）、3 天以上大鬧脾氣（先陪玩再餵）。從上一次存檔起算。
+- 離開多久：看不見的時鐘 HUD（`scripts/plugin/clock.html`，寫在 `settings.plugins.prince-hime.playback`，玩家不必安裝）每分鐘記下最後在場時間，讀檔時補上離線的飢餓與便便。反應分四段：1 小時內沒反應、1–8 小時「你回來了！」、8 小時–3 天鬧脾氣（餵了就和好）、3 天以上大鬧脾氣（先陪玩再餵）。從最後一次在場起算。
 
 測試與推送：
 
     python3 tests/check_static.py                 # 靜態檢查：wait 上限、變數讀寫名單、連線、HUD 變數
     python3 scripts/build.py --fast               # 測試用：幾秒就餓、就有便便
     python3 scripts/build.py --away=600           # 測試用：假裝上次離開 600 分鐘（直接跳培育室卡看反應）
-    python3 scripts/push_larch.py "改了什麼"        # 推上 Larch（先 commit、push；圖走 jsDelivr 釘 SHA）
+    python3 scripts/push_larch.py "改了什麼"        # 推上 Larch（先 commit、push；圖走 jsDelivr 釘 SHA；白板走 PUT board，整包 PUT 會吃掉同出口的分支）
 
 ## 🛠️ 開發與技術棧
 

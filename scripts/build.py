@@ -14,30 +14,34 @@ ART = {k: A + 'art/' + v for k, v in {
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp'}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
-VARS = {'saved_once': ('boolean', False, '寫過第一頁日誌'), 'intro_done': ('boolean', False, '看完培育室開場'),
-        'hunger': ('number', 30, '肚子餓的程度 0–100'), 'affection': ('number', 0, '親密度'), 'care_count': ('number', 0, '上次寫日誌後照顧了幾次'),
+VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
+        'hunger': ('number', 30, '肚子餓（0–100）'), 'affection': ('number', 0, '親密度'),
         'poop_a': ('boolean', False, '便便 A 在不在'), 'poop_b': ('boolean', False, '便便 B 在不在'), 'poop_c': ('boolean', False, '便便 C 在不在'),
-        'last_seen': ('number', 0, '最後在場的時間（毫秒，時鐘 HUD 寫）'), 'away_minutes': ('number', 0, '這次離開了幾分鐘（時鐘 HUD 寫，反應完歸零）'),
+        'last_seen': ('string', '', '最後在場時間'), 'away_minutes': ('number', 0, '上次離開了幾分鐘'),   # last_seen 用字串：選單「角色狀態」只列數字變數，毫秒數不該給玩家看
         'sulky': ('boolean', False, '在鬧脾氣（餵了就和好）'), 'very_sulky': ('boolean', False, '大鬧脾氣（要先陪玩）'),
         'fed': ('boolean', False, '鬧脾氣後餵過'), 'played': ('boolean', False, '鬧脾氣後玩過')}
+BASE_DEFAULTS = {k: d for k, (_, d, _) in VARS.items()}   # 正式版的預設值：重新領養一律還原成這些，不受下面測試旗標影響
 # 核心循環的節奏（只算開著遊戲的時間）
 HUNGER_TICK_MS, HUNGER_STEP, HUNGRY_AT = 30000, 10, 60
 POOP_TICK_MS = 40000
 POOP_CELLS = {'poop_a': (9, 13), 'poop_b': (15, 12), 'poop_c': (13, 5)}
-SAVE_NUDGE_AFTER = 3
+# 跨週目保留（編輯器「玩家變數 → 跨週目保留」）：寵物的狀態都留著，關掉再開就接著養，不用手動存檔。
+# 字串超過 2000 字會被截斷（播放器 Xt=2e3），背包要注意。
+PERSIST = {'intro_done', 'hunger', 'affection', 'poop_a', 'poop_b', 'poop_c', 'last_seen', 'sulky', 'very_sulky', 'fed', 'played', 'inventory'}
 # 離線時間（時鐘 HUD）：離開每 1 小時餓 10，每 2 小時一坨便便（最多三坨）；在場時每 60 秒記一次時間
 OFF_HUNGER_MS, OFF_HUNGER_STEP, OFF_POOP_MS, BEAT_MS = 3600000, 10, 7200000, 60000
 AWAY_HI, AWAY_SULK, AWAY_VERY = 60, 480, 4320   # 分鐘：1 小時、8 小時、3 天
 AWAY_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--away=')), None)   # 測試用：假裝上次離開了幾分鐘
 if AWAY_TEST is not None:
     import time
-    VARS.update(intro_done=('boolean', True, VARS['intro_done'][2]), saved_once=('boolean', True, VARS['saved_once'][2]),
-                last_seen=('number', int(time.time() * 1000) - AWAY_TEST * 60000, VARS['last_seen'][2]))
+    VARS.update(intro_done=('boolean', True, VARS['intro_done'][2]),
+                last_seen=('string', str(int(time.time() * 1000) - AWAY_TEST * 60000), VARS['last_seen'][2]))
 if '--fast' in sys.argv:   # 測試用：幾秒就餓、就有便便；開局當作已寫過日誌、肚子很餓，任務提示直接指向點心籃
     HUNGER_TICK_MS, POOP_TICK_MS, BEAT_MS = 3000, 4000, 5000
-    VARS['saved_once'] = ('boolean', True, VARS['saved_once'][2]); VARS['hunger'] = ('number', 80, VARS['hunger'][2])
+    VARS['intro_done'] = ('boolean', True, VARS['intro_done'][2]); VARS['hunger'] = ('number', 80, VARS['hunger'][2])
 RPG_VARS = [('hp', 'rpgHp', 'number', 100), ('bag', 'inventory', 'string', '[]'), ('equipment', 'rpgEquipment', 'string', '{}'),
             ('state', 'rpgState', 'string', ''), ('used', 'inventoryLastUsed', 'string', ''), ('count', 'inventoryCount', 'number', 0)]
+RPG_LABELS = {'inventoryCount': '道具數量', 'rpgHp': '生命值'}
 
 # ---------- 劇本 ----------
 # 每張卡：(id, 標題, 背景, 台詞[字串＝旁白，(講者, 文字)], 有沒有國王立繪)
@@ -92,7 +96,7 @@ CHOICES = [
     ('c-king', '國王看著你', 'throne', '國王看著你。', [('可是我只是來掃落葉的……', 'p-reluctant'), ('我會好好照顧牠。', 'p-willing')]),
     ('c-poke', '光點', 'egg-rug', '要怎麼做？', [('輕輕戳一下', 'p-poke'), ('先等等看', 'p-wait')]),
 ]
-FLOW = [('p-capital', 'p-courtyard'), ('p-courtyard', 'c-egg'), ('p-ignore', 'p-throne'), ('p-pickup', 'p-throne'),
+FLOW = [('route', 'p-capital'), ('p-capital', 'p-courtyard'), ('p-courtyard', 'c-egg'), ('p-ignore', 'p-throne'), ('p-pickup', 'p-throne'),
         ('p-throne', 'c-king'), ('p-reluctant', 'p-rules'), ('p-willing', 'p-rules'), ('p-rules', 'p-nursery'),
         ('p-nursery', 'c-poke'), ('p-poke', 'p-hatch'), ('p-wait', 'p-hatch'), ('p-hatch', 'm-nursery')]
 HOME_BGM_FROM = 'p-nursery'   # 從育嬰室開始換成培育室的音樂
@@ -150,29 +154,31 @@ def nursery():
         act('name', text='幫牠取個名字吧。', naming={'who': '', 'max': 8}),
         say('噗啾！', speaker='player', pres='bubble'),
         say('{{hero}}好像很喜歡這個名字。'),
-        say('房間左邊的小桌子上，放著一本王室日誌。'),
-        say('照顧完{{hero}}，記得去寫一頁。沒寫進日誌的日子，下次回來就不算數。'),
+        say('房間左邊的小桌子上有一本王室日誌，翻開就看得到{{hero}}今天的狀況。'),
         say('點心籃在嬰兒床旁邊，玩具箱在左下角。{{hero}}的便便會發光，看到了就去撿。'),
         setv('intro_done', True)])
+    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST] + [setv('inventory', '[]'), act('jump', cardId='p-capital')]
     journal = ev('journal', 3, 9, solid=True,   # 書放在植物旁的小桌上，小人站在 (4,9) 不會蓋住它
                  free={'url': ART['journal'], 'x': 1.9, 'y': 7.9, 'w': 1.3, 'h': 1.3},
                  marker={'label': '王室日誌', 'kind': 'talk'}, actions=[
         say('肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'),
-        act('dialogue', text='王室日誌。今天的事要寫進去嗎？', presentation='text', speaker='narrator', confirm={'accept': '寫進去', 'cancel': '等一下'}),
-        setv('care_count', 0),
-        setv('saved_once', True),   # 要在存檔前設好，存下來的那一刻才會是「寫過了」，讀檔回來任務提示才會收掉
-        act('save'),
-        say('寫好了。{{hero}}在旁邊打了一個小呵欠。')])
+        act('choice', text='要做什麼？', speaker='narrator', choice={'cancel': 'close', 'options': [
+            {'id': 'close', 'label': '闔上日誌', 'actions': []},
+            {'id': 'replay', 'label': '重看序章', 'actions': [act('jump', cardId='p-capital')]},
+            {'id': 'reset', 'label': '重新領養（從頭開始）', 'actions': [
+                act('dialogue', text='重新領養之後，{{hero}}的名字、飽足、親密度和金幣都會歸零。確定嗎？', presentation='text', speaker='narrator',
+                    confirm={'accept': '確定，從頭開始', 'cancel': '再想想'}),
+                *reset]}]})])
     loop = lambda: act('loop', loop={})
     # 時鐘：開著遊戲時每 30 秒餓一點；上下限另外兩個事件夾住
-    clock = ev('clock', 0, 0, trigger='parallel', conditions=[cond('intro_done', True)],
+    clock = ev('clock', 0, 0, trigger='parallel',   # 不掛 intro_done：背景事件只在進地圖時看條件，開場中途才成立的話要離開再回來才會跑
                actions=waits(HUNGER_TICK_MS) + [addv('hunger', HUNGER_STEP), loop()])
     cap = ev('hunger-cap', 1, 0, trigger='condition', conditions=[cond('hunger', 101, 'gte')], actions=[setv('hunger', 100)])
     floor = ev('hunger-floor', 2, 0, trigger='condition', conditions=[cond('hunger', -1, 'lte')], actions=[setv('hunger', 0)])
     hungry = ev('hungry', 3, 0, trigger='parallel', conditions=[cond('hunger', HUNGRY_AT, 'gte')],
                 actions=[balloon('rice', 2500), act('wait', amount=6000), act('loop', loop={'until': [cond('hunger', HUNGRY_AT - 1, 'lte')]})])
     def eat(name, food, fill, love):
-        return {'id': f'eat-{food}', 'label': name, 'actions': [addv('hunger', -fill), addv('affection', love), addv('care_count', 1), setv('fed', True),
+        return {'id': f'eat-{food}', 'label': name, 'actions': [addv('hunger', -fill), addv('affection', love), setv('fed', True),
                 balloon('heart'), say(f'{{{{hero}}}}一口吞下了{name}。')]}
     basket = ev('basket', 16, 5, solid=True, free={'url': ART['basket'], 'x': 16.0, 'y': 3.9, 'w': 1.3, 'h': 1.3},   # 小人從左邊 (15,5) 面向右餵，兩張圖並排不重疊
                 marker={'label': '點心籃', 'kind': 'talk'}, actions=[
@@ -180,9 +186,9 @@ def nursery():
                                                                        {'id': 'no', 'label': '現在不餓', 'actions': []}], 'cancel': 'no'})])
     toys = ev('toys', 3, 13, solid=True, marker={'label': '玩具箱', 'kind': 'talk'}, actions=[   # 箱子右緣那一格；小人站 (4,13) 面向左
         say('你從玩具箱拿出一顆彩色球。{{hero}}追著它滾了三圈。'),
-        addv('affection', 8), addv('hunger', 10), addv('care_count', 1), setv('played', True), balloon('music')])
+        addv('affection', 8), addv('hunger', 10), setv('played', True), balloon('music')])
     # 黃金便便：三個固定位置，計時器隨機點亮一個；走過去就撿起來換金幣
-    poop_timer = ev('poop-timer', 4, 0, trigger='parallel', conditions=[cond('intro_done', True)], actions=[
+    poop_timer = ev('poop-timer', 4, 0, trigger='parallel', actions=[
         *waits(POOP_TICK_MS),
         act('random', random={'min': 1, 'max': 3, 'options': [{'id': f'r{i}', 'from': i, 'to': i, 'actions': [setv(k, True)]}
                                                              for i, k in enumerate(POOP_CELLS, 1)]}),
@@ -192,8 +198,6 @@ def nursery():
                 act('sound', sound='item', audio={'url': '', 'volume': 0.8}), setv(k, False),
                 act('item', itemId='coin', itemName='王室金幣', amount=1), balloon('happy', 1600)]}])
              for k, (x, y) in POOP_CELLS.items()]
-    nudge = ev('save-nudge', 5, 0, trigger='condition', conditions=[cond('care_count', SAVE_NUDGE_AFTER, 'gte')],
-               actions=[say('要寫進日誌嗎？', speaker='player', pres='bubble'), setv('care_count', 0)])
     away = lambda lo, hi=None: [cond('away_minutes', lo, 'gte')] + ([cond('away_minutes', hi, 'lte')] if hi else [])
     bubble = lambda t: say(t, speaker='player', pres='bubble')
     welcome = ev('back-hi', 6, 0, trigger='condition', conditions=away(AWAY_HI, AWAY_SULK - 1), actions=[
@@ -211,14 +215,13 @@ def nursery():
         balloon('heart'), bubble('……這次就原諒你。'), setv('sulky', False)])
     guidance = [{'text': '牠在鬧脾氣，先陪牠玩（玩具箱）', 'eventId': 'toys', 'conditions': [cond('very_sulky', True)]},
                 {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]},
-                {'text': '去王室日誌寫下第一頁', 'eventId': 'journal', 'conditions': [cond('intro_done', True), cond('saved_once', True, 'neq')]},
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
                 {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS]
     m = {'version': 1, 'name': '皇家育嬰室', 'width': W, 'height': H, 'tileSize': 48,
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
                      'tiles': ['kn-dungeon:0' if (i % W, i // W) in walls() else None for i in range(W * H)]}],
-         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, nudge, welcome, sulk, very, makeup_play, makeup_eat] + poops, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat] + poops, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
@@ -253,11 +256,14 @@ def build():
     b = p['boards'][0]; N = b['nodes']; E = b['edges']
     for i, s in enumerate(STORY):
         N.append(story_card(*s))
-        if i == 0: N[-1]['data']['start'] = True
     for c in CHOICES:
         N.append(choice_card(*c))
         E += [edge(c[0], dst, f'choice-{i}') for i, (_, dst) in enumerate(c[4])]
     N.append(nursery())
+    # 開機分流（起點）：有條件的線先判，第一條無條件的當預設。同一出口兩條線，推送一定要走 PUT board（整包 PUT 會去重）
+    N.insert(0, {'id': 'route', 'type': 'story', 'position': {'x': -400, 'y': 0}, 'data': {'type': 'setVariable', 'title': '開機分流', 'text': '', 'start': True,
+                 'variableOps': [{'id': 'route-0', 'variable': 'booted', 'kind': 'set', 'value': 'true'}]}})
+    E.append({**edge('route', 'm-nursery'), 'data': {'condition': {'kind': 'variable', 'variable': 'intro_done', 'op': 'eq', 'value': 'true'}}})
     E += [edge(a, b2) for a, b2 in FLOW]
     by = {n['id']: n for n in N}
     home = False
@@ -267,18 +273,21 @@ def build():
             n['data'].update(bgm=BGM_HOME if home else BGM_STORY, bgmVolume=0.45, bgmLoop=True)
     p['nodes'], p['edges'] = N, E
     p['variables'] = ([{'id': k, 'name': k, 'label': lab, 'type': t, 'defaultValue': d} for k, (t, d, lab) in VARS.items()]
-                      + [{'id': i, 'name': n, 'label': n, 'type': t, 'defaultValue': d} for i, n, t, d in RPG_VARS])
+                      + [{'id': i, 'name': n, 'label': RPG_LABELS.get(n, n), 'type': t, 'defaultValue': d} for i, n, t, d in RPG_VARS])
+    for v in p['variables']:
+        if v['name'] in PERSIST: v['persistent'] = True
     s = p['settings']
     s['plugins']['prince-hime'] = clock_plugin()
     rpg = s['plugins']['larch-rpg-system']['settings']
     rpg['database'] = json.dumps(database(), ensure_ascii=False)
+    # 狀態靠跨週目變數保留，選單不放存檔／讀檔：讀舊檔和跨週目值打架的情況就不會發生
+    rpg['menuUi'] = json.dumps({'preset': 'sakura', 'buttons': ['status', 'bag', 'settings', 'title']}, ensure_ascii=False)
     rpg['items'] = json.dumps([{'id': 'coin', 'name': '王室金幣', 'icon': ART['coin'], 'note': '黃金便便換來的金幣。', 'heal': 0,
                                 'bag': {'consumable': False, 'effectKind': 'none', 'effectVar': '', 'effectValue': '',
                                         'useConditionVariable': '', 'useConditionValue': '', 'useConditionMessage': ''}}], ensure_ascii=False)
     s.update(titleCoverImage=ART['cover'], projectThumbnail=ART['cover'], stageFit='auto', keepActorsInFrame=False, titleScreenEnabled=True,
              titleScreen={'bgm': BGM_HOME, 'bgmVolume': 0.35, 'layers': [
-                 {'x': 76, 'y': 84, 'id': 'action-start', 'icon': True, 'kind': 'button', 'size': 1.25, 'width': 22, 'action': 'start', 'text': '王子姬的故事', 'label': '王子姬的故事'},
-                 {'x': 76, 'y': 90.5, 'id': 'action-continue', 'icon': True, 'kind': 'button', 'size': 1.25, 'width': 22, 'action': 'continue', 'text': '回到培育室', 'label': '回到培育室'}]})
+                 {'x': 76, 'y': 88, 'id': 'action-start', 'icon': True, 'kind': 'button', 'size': 1.25, 'width': 22, 'action': 'start', 'text': '進入王宮', 'label': '進入王宮'}]})
     assert {e['target'] for e in E} <= set(by) and {e['source'] for e in E} <= set(by), '有連線指到不存在的卡'
     return p
 
