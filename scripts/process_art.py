@@ -72,10 +72,12 @@ def main():
             o = OUT / name; o.parent.mkdir(parents=True, exist_ok=True); part.save(o); despill(o)
             w = o.with_suffix('.webp'); Image.open(o).save(w, quality=90); o.unlink(); print('ok', w.name, part.size)   # 帶透明的 webp，比 png 小很多
     cut_sheet('sheet-props', [('props/basket.webp', 256), ('props/poop.webp', 128), ('props/coin.webp', 128)])
-    slime = ROOT / 'assets/concept/sprite-test-daily.webp'
-    o = OUT / 'walk/slime-daily.png'; o.parent.mkdir(parents=True, exist_ok=True)
-    resize_pm(Image.open(slime), (128, 128)).save(o); despill(o)
-    Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk 128 webp')
+    cut_sheet('sheet-gift', [('props/gift.webp', 256)])
+    for name, src in (('slime-daily', 'sprite-test-daily'), ('slime-lubu', 'sprite-test-lubu')):   # 平常與飛將造型的地圖小人
+        o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
+        resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (128, 128)).save(o); despill(o)
+        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
+
 
 
 if __name__ == '__main__':

@@ -26,6 +26,15 @@ function sync() {
   lastWritten = now; set('last_seen', String(now));   // 字串變數（選單只列數字變數，毫秒數不給玩家看）
 }
 
+function syncName() {                             // 名字存在 rpgState 的 @names（依角色 id），換造型就換了 id；抄到 pet_name 讓文字一直叫得到
+  if (!active) return;
+  try {
+    var names = (JSON.parse(vars.rpgState || '{}')['@names']) || {};
+    var n = names.ph;
+    if (n && n !== vars.pet_name) set('pet_name', n);
+  } catch (e) {}
+}
+
 function heartbeat() {                             // 在場時定時更新最後時間，存檔時就會一起存下來
   clearInterval(beat);
   beat = setInterval(function () {
@@ -42,7 +51,7 @@ addEventListener('message', function (e) {
   var was = active; active = d.active !== false;
   if (active && !was) heartbeat();
   if (!active) clearInterval(beat);
-  sync();
+  sync(); syncName();
 });
 parent.postMessage({ type: 'larch:ready' }, '*');
 </script>

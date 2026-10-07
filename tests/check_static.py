@@ -33,6 +33,15 @@ def check(flags):
                 if 'loop' in a: conds += a['loop'].get('until', [])
             bad += [f'{e["id"]}：條件用到沒宣告的變數 {c["variable"]}' for c in conds if c['kind'] == 'variable' and c['variable'] not in declared]
         bad += [f'任務提示用到沒宣告的變數 {c["variable"]}' for g in m.get('guidance', []) for c in g['conditions'] if c['variable'] not in declared]
+        W = m['width']; wall = {(i % W, i // W) for i, t in enumerate(m['layers'][0]['tiles']) if t}
+        for e in m['events']:
+            xy = (e['x'], e['y'])
+            standable = e.get('actor') == 'player' or e['id'].startswith('poop_') or e['trigger'] == 'auto' and e['id'] == 'intro'
+            if standable and xy in wall: bad.append(f'{e["id"]} 在牆格 {xy}，站不上去')
+            if e['trigger'] == 'action' and (e.get('actions') or e.get('pages')) and e.get('marker'):
+                free = [(e['x'] + dx, e['y'] + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                        if 0 <= e['x'] + dx < W and 0 <= e['y'] + dy < m['height'] and (e['x'] + dx, e['y'] + dy) not in wall]
+                if not free: bad.append(f'{e["id"]} {xy} 四周都是牆，走不到')
     for pid, pl in p['settings']['plugins'].items():
         for h in (pl.get('playback') or {}).get('huds', []):
             bad += [f'HUD {h["id"]} 讀寫沒宣告的變數 {v}' for v in h.get('readVariables', []) + h.get('writeVariables', []) if v not in declared]

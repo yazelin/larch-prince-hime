@@ -11,7 +11,7 @@ BGM_STORY, BGM_HOME = R2 + '1784841727962_sproutlight-path.mp3', R2 + '178484172
 ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
-    'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp'}.items()}
+    'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp', 'slime-lubu': 'walk/slime-lubu.webp'}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
@@ -20,6 +20,29 @@ VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目�
         'last_seen': ('string', '', '最後在場時間'), 'away_minutes': ('number', 0, '上次離開了幾分鐘'),   # last_seen 用字串：選單「角色狀態」只列數字變數，毫秒數不該給玩家看
         'sulky': ('boolean', False, '在鬧脾氣（餵了就和好）'), 'very_sulky': ('boolean', False, '大鬧脾氣（要先陪玩）'),
         'fed': ('boolean', False, '鬧脾氣後餵過'), 'played': ('boolean', False, '鬧脾氣後玩過')}
+# 作品聯動：原作品在「取得道具」卡打開 crossover，玩家在原作拿到過，這裡的 cross_<鍵> 就會是 "true"（引擎設的字串）。
+# 數值跟著原作品走；這 8 件是背包道具，本身沒有戰鬥數值，在本作是禮物與造型解鎖。格式照《無雙》已經在用的寫法。
+BUCHAN, TAOYUAN = 'project-1980dcc9-13b3-451c-8bf6-71b05bd5bfa9', 'project-6e031e3a-f508-4d77-aaa2-795edb6a80f4'
+CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的一句, 解鎖的造型)
+    ('lubu', BUCHAN, 'w-lubu', '方天畫戟', '仙泉谷', '暗紅的長杆，刃下一束紅纓。', 'lubu'),
+    ('weixu', BUCHAN, 'w-weixu', '環首刀', '仙泉谷', '刀柄末端有一個鐵環。', ''),
+    ('quan', BUCHAN, 'w-quan', '小木弓', '仙泉谷', '一把很小的木弓，弦上還纏著布條。', ''),
+    ('xiang', BUCHAN, 'w-xiang', '鐵剪刀', '仙泉谷', '兩片刃，尾端一個鐵環。', ''),
+    ('diaochan', BUCHAN, 'handkerchief', '冷梅帕', '仙泉谷', '一方帕子，角上繡著冷梅。', ''),
+    ('liubei', TAOYUAN, 'w-liubei', '雙股劍', '涿郡桃園', '一雌一雄兩把劍。', ''),
+    ('guanyu', TAOYUAN, 'w-guanyu', '青龍偃月刀', '涿郡桃園', '刀身削成一彎新月。', ''),
+    ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', ''),
+]
+WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義'}
+OUTFITS = {'lubu': ('ph-lubu', '飛將', 'slime-lubu')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
+for k, *_ in CROSS:
+    VARS[f'got_{k}'] = ('boolean', False, f'領過聯動禮物 {k}')
+VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
+VARS['mirror_seen'] = ('boolean', False, '打開過穿衣鏡')
+VARS['pet_name'] = ('string', '', '寵物的名字（時鐘 HUD 從 rpgState 抄出來，換造型也不變）')
+CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_seen', 'pet_name', 'rpgState'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
+CROSS_VARS = [f'cross_{k}' for k, *_ in CROSS]   # 引擎依玩家收藏設的字串變數，id 照《無雙》加 rpg- 前綴
+
 BASE_DEFAULTS = {k: d for k, (_, d, _) in VARS.items()}   # 正式版的預設值：重新領養一律還原成這些，不受下面測試旗標影響
 # 核心循環的節奏（只算開著遊戲的時間）
 HUNGER_TICK_MS, HUNGER_STEP, HUNGRY_AT = 30000, 10, 60
@@ -28,9 +51,11 @@ POOP_CELLS = {'poop_a': (9, 13), 'poop_b': (15, 12), 'poop_c': (13, 5)}
 # 跨週目保留（編輯器「玩家變數 → 跨週目保留」）：寵物的狀態都留著，關掉再開就接著養，不用手動存檔。
 # 字串超過 2000 字會被截斷（播放器 Xt=2e3），背包要注意。
 PERSIST = {'intro_done', 'hunger', 'affection', 'poop_a', 'poop_b', 'poop_c', 'last_seen', 'sulky', 'very_sulky', 'fed', 'played', 'inventory'}
+PERSIST |= CROSS_PERSIST
 # 離線時間（時鐘 HUD）：離開每 1 小時餓 10，每 2 小時一坨便便（最多三坨）；在場時每 60 秒記一次時間
 OFF_HUNGER_MS, OFF_HUNGER_STEP, OFF_POOP_MS, BEAT_MS = 3600000, 10, 7200000, 60000
 AWAY_HI, AWAY_SULK, AWAY_VERY = 60, 480, 4320   # 分鐘：1 小時、8 小時、3 天
+CROSS_TEST = [x for a in sys.argv if a.startswith('--cross=') for x in a.split('=', 1)[1].split(',')]   # 測試用：假裝收藏裡已經有這些（例如 --cross=lubu）
 AWAY_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--away=')), None)   # 測試用：假裝上次離開了幾分鐘
 if AWAY_TEST is not None:
     import time
@@ -140,15 +165,21 @@ def ev(id, x, y, **kw):
 
 W, H = 24, 18
 def walls():
-    # ponytail: 依 nursery.webp 目測框出擋路的家具，換地圖圖要重框
-    rects = [(0, 0, 23, 1),            # 上牆
-             (0, 2, 4, 6), (1, 7, 3, 10), (0, 11, 3, 17),      # 左：貝殼鏡與小凳、植物小桌、玩具箱
-             (17, 0, 23, 4), (19, 5, 23, 7), (20, 8, 23, 17),  # 右：嬰兒床、邊桌、沙發
-             (0, 17, 23, 17)]          # 下緣欄杆
+    # 照 nursery.webp 疊 24×18 格線對出來的（每格 60.3px）。換地圖圖要重對；互動點都放在只有一面走得到的格子。
+    rects = [(0, 0, 23, 2), (0, 3, 6, 3),                 # 上牆、書櫃與盆栽
+             (0, 4, 2, 8), (3, 5, 3, 8),                  # 貝殼鏡、矮凳（含鏡子下緣）
+             (0, 9, 1, 10), (2, 9, 3, 10),                # 盆栽、糖果小桌
+             (0, 11, 3, 15),                              # 玩具箱
+             (18, 3, 23, 6), (22, 6, 23, 7),              # 嬰兒床（含床下圓毯）、檯燈邊桌；點心籃在床左下角 (18,5)，只能從 (17,5) 靠近
+             (22, 8, 23, 9), (21, 10, 23, 16),            # 盆栽、沙發
+             (15, 10, 16, 11),                            # 地毯上的圓墊
+             (0, 16, 9, 17), (15, 16, 23, 17), (10, 17, 14, 17)]   # 下緣欄杆；(10..14,16) 是門口地墊，之後接別的地圖
     return {(x, y) for x0, y0, x1, y1 in rects for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)}
 
 def nursery():
-    hero = ev('hero', 12, 9, name='王子姬', actor='player', actorId='ph', direction='down',
+    # 主角事件不綁 actorId：引擎畫的是資料庫 heroId 那位，hero 步驟換人（換裝）地圖上才會跟著換。sprite 只是佔位（照《無雙》的寫法）
+    # 主角：引擎畫資料庫 heroId 那位（換裝＝hero 步驟換人）；事件上的 sprite 是資料庫讀不到時的備用
+    hero = ev('hero', 12, 9, name='王子姬', actor='player', direction='down',
               sprite={'url': ART['slime'], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'})
     intro = ev('intro', 12, 12, trigger='auto', once=True, conditions=[cond('intro_done', True, 'neq')], actions=[
         act('name', text='幫牠取個名字吧。', naming={'who': '', 'max': 8}),
@@ -157,16 +188,16 @@ def nursery():
         say('房間左邊的小桌子上有一本王室日誌，翻開就看得到{{hero}}今天的狀況。'),
         say('點心籃在嬰兒床旁邊，玩具箱在左下角。{{hero}}的便便會發光，看到了就去撿。'),
         setv('intro_done', True)])
-    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST] + [setv('inventory', '[]'), act('jump', cardId='p-capital')]
-    journal = ev('journal', 3, 9, solid=True,   # 書放在植物旁的小桌上，小人站在 (4,9) 不會蓋住它
-                 free={'url': ART['journal'], 'x': 1.9, 'y': 7.9, 'w': 1.3, 'h': 1.3},
+    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST] + [setv('inventory', '[]'), setv('rpgState', ''), act('jump', cardId='p-capital')]
+    journal = ev('journal', 3, 9, solid=True,   # 糖果小桌右半；只能從右邊 (4,9) 靠近，按左鍵只會轉身
+                 free={'url': ART['journal'], 'x': 2.4, 'y': 7.9, 'w': 1.3, 'h': 1.3},
                  marker={'label': '王室日誌', 'kind': 'talk'}, actions=[
-        say('肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'),
+        say('{{pet_name}}　肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'),
         act('choice', text='要做什麼？', speaker='narrator', choice={'cancel': 'close', 'options': [
             {'id': 'close', 'label': '闔上日誌', 'actions': []},
             {'id': 'replay', 'label': '重看序章', 'actions': [act('jump', cardId='p-capital')]},
             {'id': 'reset', 'label': '重新領養（從頭開始）', 'actions': [
-                act('dialogue', text='重新領養之後，{{hero}}的名字、飽足、親密度和金幣都會歸零。確定嗎？', presentation='text', speaker='narrator',
+                act('dialogue', text='重新領養之後，{{pet_name}}的名字、飽足、親密度和金幣都會歸零。確定嗎？', presentation='text', speaker='narrator',
                     confirm={'accept': '確定，從頭開始', 'cancel': '再想想'}),
                 *reset]}]})])
     loop = lambda: act('loop', loop={})
@@ -179,13 +210,13 @@ def nursery():
                 actions=[balloon('rice', 2500), act('wait', amount=6000), act('loop', loop={'until': [cond('hunger', HUNGRY_AT - 1, 'lte')]})])
     def eat(name, food, fill, love):
         return {'id': f'eat-{food}', 'label': name, 'actions': [addv('hunger', -fill), addv('affection', love), setv('fed', True),
-                balloon('heart'), say(f'{{{{hero}}}}一口吞下了{name}。')]}
-    basket = ev('basket', 16, 5, solid=True, free={'url': ART['basket'], 'x': 16.0, 'y': 3.9, 'w': 1.3, 'h': 1.3},   # 小人從左邊 (15,5) 面向右餵，兩張圖並排不重疊
+                balloon('heart'), say(f'{{{{pet_name}}}}一口吞下了{name}。')]}
+    basket = ev('basket', 18, 5, solid=True, free={'url': ART['basket'], 'x': 17.6, 'y': 3.9, 'w': 1.3, 'h': 1.3},   # 嬰兒床左下角；只能從左邊 (17,5) 靠近，按右鍵只會轉身
                 marker={'label': '點心籃', 'kind': 'talk'}, actions=[
         act('choice', text='要吃什麼？', speaker='narrator', choice={'options': [eat('草莓布丁', 'pudding', 40, 3), eat('蜂蜜鬆餅', 'pancake', 30, 5),
                                                                        {'id': 'no', 'label': '現在不餓', 'actions': []}], 'cancel': 'no'})])
     toys = ev('toys', 3, 13, solid=True, marker={'label': '玩具箱', 'kind': 'talk'}, actions=[   # 箱子右緣那一格；小人站 (4,13) 面向左
-        say('你從玩具箱拿出一顆彩色球。{{hero}}追著它滾了三圈。'),
+        say('你從玩具箱拿出一顆彩色球。{{pet_name}}追著它滾了三圈。'),
         addv('affection', 8), addv('hunger', 10), setv('played', True), balloon('music')])
     # 黃金便便：三個固定位置，計時器隨機點亮一個；走過去就撿起來換金幣
     poop_timer = ev('poop-timer', 4, 0, trigger='parallel', actions=[
@@ -198,15 +229,37 @@ def nursery():
                 act('sound', sound='item', audio={'url': '', 'volume': 0.8}), setv(k, False),
                 act('item', itemId='coin', itemName='王室金幣', amount=1), balloon('happy', 1600)]}])
              for k, (x, y) in POOP_CELLS.items()]
+    # 禮物箱：放在沙發上（牆格），小人只能從左邊 (20,12) 靠近，按右鍵只會轉身。每件一個分頁，一次領一件。
+    def gift_page(k, work, ref, name, place, line, outfit):
+        acts = [say(f'國王的使者送來一個包裹，封蠟上寫著「{place}」。'), say(f'裡面是{name}。{line}'),
+                act('item', itemId=f'cx-{k}', itemName=name, amount=1), setv(f'got_{k}', True), balloon('heart')]
+        if outfit: acts.append(say(f'穿衣鏡那邊多了一套「{OUTFITS[outfit][1]}」造型。'))
+        return {'id': f'gift-{k}', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE,
+                'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False, 'actions': acts}
+    gift = ev('gift', 21, 12, solid=True, free={'url': ART['gift'], 'x': 20.6, 'y': 10.9, 'w': 1.3, 'h': 1.3},
+              marker={'label': '禮物箱', 'kind': 'talk'}, actions=[say('禮物箱現在是空的。別的王國送東西來的時候，會先放在這裡。')],
+              pages=[gift_page(*c) for c in reversed(CROSS)])   # 後面的分頁優先：照清單順序一件一件給
+    # 穿衣鏡：貝殼鏡上緣 (2,4)（牆格），小人只能從右邊 (3,4) 靠近，按左鍵只會轉身。
+    wear = lambda okey: [act('hero', value=OUTFITS[okey][0] if okey else 'ph'), setv('outfit', okey)]
+    outfit_opts = [{'id': 'plain', 'label': '平常', 'actions': wear('')}] + [
+        {'id': f'o-{o}', 'label': OUTFITS[o][1], 'actions': wear(o)} for o in OUTFITS] + [{'id': 'keep', 'label': '不換', 'actions': []}]
+    mirror = ev('mirror', 2, 4, solid=True, marker={'label': '穿衣鏡', 'kind': 'talk'}, actions=[
+        say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的兵器以後，可以在這裡換造型。'), setv('mirror_seen', True)],
+        pages=[{'id': f'mirror-{o}', 'conditions': [cond(f'got_{o}', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
+                'trigger': 'action', 'once': False, 'actions': [setv('mirror_seen', True),
+                act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': outfit_opts})]} for o in OUTFITS])
+    # 換裝跨週目保留：進地圖時照 outfit 換回去（主角換人存在本輪存檔裡，跨週目只留得住變數）
+    restores = [ev(f'outfit-{o}', 11 + i, 0, trigger='auto', conditions=[cond('outfit', o)], actions=[act('hero', value=OUTFITS[o][0])])
+                for i, o in enumerate(OUTFITS)]
     away = lambda lo, hi=None: [cond('away_minutes', lo, 'gte')] + ([cond('away_minutes', hi, 'lte')] if hi else [])
     bubble = lambda t: say(t, speaker='player', pres='bubble')
     welcome = ev('back-hi', 6, 0, trigger='condition', conditions=away(AWAY_HI, AWAY_SULK - 1), actions=[
         balloon('heart'), bubble('你回來了！'), setv('away_minutes', 0)])
     sulk = ev('back-sulk', 7, 0, trigger='condition', conditions=away(AWAY_SULK, AWAY_VERY - 1), actions=[
-        balloon('anger'), bubble('本宮等很久了。'), say('{{hero}}把臉轉開。餵牠吃點東西，大概就會和好。'),
+        balloon('anger'), bubble('本宮等很久了。'), say('{{pet_name}}把臉轉開。餵牠吃點東西，大概就會和好。'),
         setv('fed', False), setv('sulky', True), setv('away_minutes', 0)])
     very = ev('back-very', 8, 0, trigger='condition', conditions=away(AWAY_VERY), actions=[
-        balloon('anger'), say('{{hero}}縮在房間角落，背對著你，怎麼叫都不回頭。'),
+        balloon('anger'), say('{{pet_name}}縮在房間角落，背對著你，怎麼叫都不回頭。'),
         say('地上有一張歪歪扭扭的紙條：「本宮不理你了。」'), say('先陪牠玩一下吧。'),
         setv('played', False), setv('fed', False), setv('very_sulky', True), setv('sulky', True), setv('away_minutes', 0)])
     makeup_play = ev('makeup-play', 9, 0, trigger='condition', conditions=[cond('very_sulky', True), cond('played', True)], actions=[
@@ -214,19 +267,21 @@ def nursery():
     makeup_eat = ev('makeup-eat', 10, 0, trigger='condition', conditions=[cond('sulky', True), cond('very_sulky', True, 'neq'), cond('fed', True)], actions=[
         balloon('heart'), bubble('……這次就原諒你。'), setv('sulky', False)])
     guidance = [{'text': '牠在鬧脾氣，先陪牠玩（玩具箱）', 'eventId': 'toys', 'conditions': [cond('very_sulky', True)]},
-                {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]},
+                {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]}] + [
+                {'text': '有遠方送來的禮物', 'eventId': 'gift', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')]} for k, *_ in CROSS] + [
+                {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond(f'got_{o}', True), cond('mirror_seen', True, 'neq')]} for o in OUTFITS] + [
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
                 {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS]
     m = {'version': 1, 'name': '皇家育嬰室', 'width': W, 'height': H, 'tileSize': 48,
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
                      'tiles': ['kn-dungeon:0' if (i % W, i // W) in walls() else None for i in range(W * H)]}],
-         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat] + poops, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
                          'ambience': {'particles': 'sparkles', 'density': 0.3, 'rays': 0.5, 'tint': '#FFF7EE', 'tintStrength': 0.2}}}
-    names = list(VARS) + [n for _, n, _, _ in RPG_VARS]
+    names = list(VARS) + CROSS_VARS + [n for _, n, _, _ in RPG_VARS]
     return {'id': 'm-nursery', 'type': 'story', 'position': pos(), 'data': {
         'type': 'plugin', 'title': '皇家育嬰室', 'text': '', 'pluginId': 'larch-rpg-system', 'pluginCardId': 'map', 'pluginVersion': '0.4.0',
         'pluginName': 'RPG 系統', 'pluginCardName': 'RPG 地圖', 'pluginIcon': 'map', 'pluginColor': '#4a7358', 'pluginPresentation': 'fullscreen',
@@ -239,17 +294,20 @@ def clock_plugin():
     html = (ROOT / 'scripts/plugin/clock.html').read_text()
     for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS}.items():
         html = html.replace(f'__{k}__', str(v))
-    read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c']
+    read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'rpgState', 'pet_name']
     hud = {'id': 'clock', 'title': '時鐘', 'anchor': 'bottom-left', 'width': 32, 'height': 32, 'offsetX': 0, 'offsetY': 0,
-           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c'], 'html': html}
+           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'pet_name'], 'html': html}
     return {'enabled': True, 'playback': {'version': '0.1.0', 'permissions': ['player:ui', 'variables:read', 'variables:write'], 'defaults': {}, 'huds': [hud]}}
 
 
 def database():
-    walk = {'url': ART['slime'], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'}
-    return {'version': 1, 'heroId': 'ph', 'leadSwitch': False, 'actors': [
-        {'id': 'ph', 'name': '王子姬', 'title': '', 'profile': '', 'role': 'party', 'walk': {'sprite': walk}, 'portrait': ART['slime'],
-         'kit': 'none', 'rig': 'slime', 'joinVariable': ''}]}
+    def actor(id, sprite):
+        walk = {'url': ART[sprite], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'}
+        return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': 'party', 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
+                'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
+    # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
+    return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
+            'actors': [actor('ph', 'slime')] + [actor(aid, spr) for aid, _, spr in OUTFITS.values()]}
 
 def build():
     p = json.loads((ROOT / 'skeleton/project.json').read_text())
@@ -274,6 +332,8 @@ def build():
     p['nodes'], p['edges'] = N, E
     p['variables'] = ([{'id': k, 'name': k, 'label': lab, 'type': t, 'defaultValue': d} for k, (t, d, lab) in VARS.items()]
                       + [{'id': i, 'name': n, 'label': RPG_LABELS.get(n, n), 'type': t, 'defaultValue': d} for i, n, t, d in RPG_VARS])
+    p['variables'] += [{'id': f'rpg-{n}', 'name': n, 'label': n, 'type': 'string', 'scope': 'project',
+                        'defaultValue': 'true' if n[6:] in CROSS_TEST else ''} for n in CROSS_VARS]
     for v in p['variables']:
         if v['name'] in PERSIST: v['persistent'] = True
     s = p['settings']
@@ -284,7 +344,9 @@ def build():
     rpg['menuUi'] = json.dumps({'preset': 'sakura', 'buttons': ['status', 'bag', 'settings', 'title']}, ensure_ascii=False)
     rpg['items'] = json.dumps([{'id': 'coin', 'name': '王室金幣', 'icon': ART['coin'], 'note': '黃金便便換來的金幣。', 'heal': 0,
                                 'bag': {'consumable': False, 'effectKind': 'none', 'effectVar': '', 'effectValue': '',
-                                        'useConditionVariable': '', 'useConditionValue': '', 'useConditionMessage': ''}}], ensure_ascii=False)
+                                        'useConditionVariable': '', 'useConditionValue': '', 'useConditionMessage': ''}}]
+                              + [{'id': f'cx-{k}', 'name': name, 'note': f'從《{WORKS[work]}》送來的。{line}', 'heal': 0, 'crossProject': work, 'crossRef': ref,
+                                  'crossWork': WORKS[work], 'crossLater': True, 'crossVar': f'cross_{k}'} for k, work, ref, name, place, line, _ in CROSS], ensure_ascii=False)
     s.update(titleCoverImage=ART['cover'], projectThumbnail=ART['cover'], stageFit='auto', keepActorsInFrame=False, titleScreenEnabled=True,
              titleScreen={'bgm': BGM_HOME, 'bgmVolume': 0.35, 'layers': [
                  {'x': 76, 'y': 88, 'id': 'action-start', 'icon': True, 'kind': 'button', 'size': 1.25, 'width': 22, 'action': 'start', 'text': '進入王宮', 'label': '進入王宮'}]})

@@ -47,6 +47,8 @@ JOBS = {
                     'Left: a round wicker snack basket with a pink gingham cloth, holding a strawberry pudding and a small stack of honey pancakes. '
                     'Middle: one glowing golden star-shaped konpeito candy, honey-gold, glossy, with a few tiny sparkles, cute and clean (this is the pet\'s golden poop, it must look like candy). '
                     'Right: a single shiny gold coin with a small crown emblem embossed on it. ' + GREEN),
+    'sheet-gift': (['style'], 'One single cute game prop, three-quarter top-down view, same glossy cute rendering as the reference: a small royal gift box wrapped in cream paper '
+                   'with a pink satin ribbon bow on top and a round golden wax seal with a tiny crown, a few soft sparkles around it. ' + GREEN),
 }
 
 
