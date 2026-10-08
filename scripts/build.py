@@ -15,7 +15,7 @@ ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
-    **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei', 'diaochan') for x in ('', '-still')}}.items()}
+    **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'lubu-heijin', 'liubei', 'guanyu', 'zhangfei', 'diaochan') for x in ('', '-still')}}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
@@ -38,9 +38,11 @@ CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的�
     ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', 'zhangfei'),
 ]
 WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義'}
-OUTFITS = {'lubu': ('ph-lubu', '方天畫戟', 'slime-lubu'), 'liubei': ('ph-liubei', '雙股劍', 'slime-liubei'),
-           'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei'),
-           'diaochan': ('ph-diaochan', '冷梅帕', 'slime-diaochan')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
+OUTFITS = {'lubu': ('ph-lubu', '方天畫戟・百花', 'slime-lubu', 'lubu'), 'heijin': ('ph-lubu-heijin', '方天畫戟・黑金', 'slime-lubu-heijin', 'lubu'),
+           'liubei': ('ph-liubei', '雙股劍', 'slime-liubei', 'liubei'),
+           'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu', 'guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei', 'zhangfei'),
+           'diaochan': ('ph-diaochan', '冷梅帕', 'slime-diaochan', 'diaochan')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖, 解鎖它的聯動禮物)；方天畫戟一件解鎖呂布兩套
+UNLOCKS = list(dict.fromkeys(v[3] for v in OUTFITS.values()))   # 解鎖造型的禮物（穿衣鏡依「拿到哪幾件」分頁）
 for k, *_ in CROSS:
     VARS[f'got_{k}'] = ('boolean', False, f'領過聯動禮物 {k}')
 VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
@@ -156,7 +158,8 @@ _aid = itertools.count(1)
 def act(kind, **kw):
     a = {'id': f'a{next(_aid)}', 'kind': kind, 'text': '', 'cardId': '', 'itemId': '', 'itemName': '', 'variable': '', 'value': '', 'amount': 1}
     a.update(kw); return a
-def say(t, speaker='narrator', pres='text'): return act('dialogue', text=t, presentation=pres, speaker=speaker)
+def say(t, speaker='narrator', pres='bubble'):   # 地圖上的話一律用泡泡框，掛在寵物頭上（2026-10-08 作者：底部文字改泡泡）；who 沒寫會掛在觸發的事件上，自動事件放在牆格會飄到牆上
+    return act('dialogue', text=t, presentation=pres, speaker=speaker, who='hero')
 def setv(k, v): return act('variable', variable=k, value=str(v).lower() if isinstance(v, bool) else str(v))
 def waits(ms):   # wait 步驟上限 9999 毫秒，長的等待拆成幾段
     return [act('wait', amount=min(9999, ms - i)) for i in range(0, ms, 9999)]
@@ -251,7 +254,9 @@ def nursery():
     def gift_page(k, work, ref, name, place, line, outfit):
         acts = [say(f'國王的使者送來一個包裹，封蠟上寫著「{place}」。'), say(f'裡面是{name}。{line}'),
                 act('item', itemId=f'cx-{k}', itemName=name, amount=1), setv(f'got_{k}', True), balloon('heart')]
-        if outfit: acts += [say(f'穿衣鏡那邊多了一套「{OUTFITS[outfit][1]}」造型。'), setv('mirror_new', True)]
+        if outfit:
+            got = [v[1] for v in OUTFITS.values() if v[3] == k]
+            acts += [say(f'穿衣鏡那邊多了{"兩" if len(got) == 2 else "一"}套造型：{"、".join(got)}。'), setv('mirror_new', True)]
         return {'id': f'gift-{k}', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE,
                 'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False, 'actions': acts}
     gift = ev('gift', 21, 12, solid=True, free={'url': ART['gift'], 'x': 20.6, 'y': 10.9, 'w': 1.3, 'h': 1.3},
@@ -262,11 +267,11 @@ def nursery():
     # 選項不能各自帶條件，所以「拿到哪幾件」的每種組合各一個分頁，選單只列拿到的造型（4 件＝15 頁，引擎上限 98）
     def mirror_page(have):
         opts = [{'id': 'plain', 'label': '平常', 'actions': wear('')}] + [
-            {'id': f'o-{o}', 'label': OUTFITS[o][1], 'actions': wear(o)} for o in have] + [{'id': 'keep', 'label': '不換', 'actions': []}]
-        return {'id': 'mirror-' + '-'.join(have), 'conditions': [cond(f'got_{o}', True, 'eq' if o in have else 'neq') for o in OUTFITS],
+            {'id': f'o-{o}', 'label': v[1], 'actions': wear(o)} for o, v in OUTFITS.items() if v[3] in have] + [{'id': 'keep', 'label': '不換', 'actions': []}]
+        return {'id': 'mirror-' + '-'.join(have), 'conditions': [cond(f'got_{u}', True, 'eq' if u in have else 'neq') for u in UNLOCKS],
                 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False,
                 'actions': [setv('mirror_new', False), act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': opts})]}
-    combos = [[o for i, o in enumerate(OUTFITS) if n >> i & 1] for n in range(1, 2 ** len(OUTFITS))]
+    combos = [[u for i, u in enumerate(UNLOCKS) if n >> i & 1] for n in range(1, 2 ** len(UNLOCKS))]
     mirror = ev('mirror', 2, 4, solid=True, marker={'label': '穿衣鏡', 'kind': 'talk'}, actions=[
         say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的兵器以後，可以在這裡換造型。')],
         pages=[mirror_page(h) for h in combos])
@@ -337,7 +342,7 @@ def layered(m):
 def clock_plugin():
     """看不見的時鐘 HUD：記最後在場時間，讀檔時補上離線期間的飢餓與便便。直接寫 playback，玩家不必安裝。"""
     html = (ROOT / 'scripts/plugin/clock.html').read_text()
-    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS, 'OUTFIT_IDS': json.dumps([a for a, _, _ in OUTFITS.values()])}.items():
+    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS, 'OUTFIT_IDS': json.dumps([v[0] for v in OUTFITS.values()])}.items():
         html = html.replace(f'__{k}__', str(v))
     read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'rpgState', 'pet_name']
     hud = {'id': 'clock', 'title': '時鐘', 'anchor': 'bottom-left', 'width': 32, 'height': 32, 'offsetX': 0, 'offsetY': 0,
@@ -352,7 +357,7 @@ def database():
                 'kit': 'none', 'rig': 'slime', 'joinVariable': '', **({'speed': 2} if LAYERED else {})}   # 細格一步只有半格，速度加倍手感不變
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
-            'actors': [actor('ph', 'slime')] + [actor(aid, spr, 'npc') for aid, _, spr in OUTFITS.values()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
+            'actors': [actor('ph', 'slime')] + [actor(v[0], v[2], 'npc') for v in OUTFITS.values()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
 
 def build():
     p = json.loads((ROOT / 'skeleton/project.json').read_text())
