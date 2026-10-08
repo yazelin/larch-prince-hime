@@ -32,6 +32,8 @@
 
 ## 📂 文件導覽
 
+- `listing/`：市集上架用的簡介（description.txt）、標籤（tags.txt）、更新說明（release-notes.md，每次發佈貼進備註欄）。
+
 - [01. 遊戲核心設計與世界觀設定](docs/01-game-concept.md)：世界觀、萌蛋孵化期、性別轉化矩陣、日常照料細節。
 - [02. Larch RPG 技術可行性與連線架構](docs/02-larch-rpg-architecture.md)：單機培育循環實作、線上模式特性與邊界、Duel 決鬥機制、密令聯姻方案。
 - [03. 成長數值與戰鬥技能系統](docs/03-growth-and-combat-spec.md)：四維數值公式、進化分支樹、道具與裝備、技能庫。
