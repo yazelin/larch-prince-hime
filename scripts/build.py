@@ -498,6 +498,15 @@ def build():
     rpg = s['plugins']['larch-rpg-system']['settings']
     rpg['database'] = json.dumps(database(), ensure_ascii=False)
     # 狀態靠跨週目變數保留，選單不放存檔／讀檔：讀舊檔和跨週目值打架的情況就不會發生
+    # 多人連線只開在王城中央廣場（育嬰室放 soloMaps）；對戰等寵物有數值再開。push_larch 整份覆寫這個插件設定，所以連線設定也在這裡管
+    rpg['online'] = json.dumps({'version': 1, 'enabled': True, 'access': 'everyone', 'channelMode': 'auto', 'channelList': [{'id': 'ch-1', 'name': '王城', 'icon': '🌲'}],
+        'channelSize': 50, 'chat': 'free', 'filter': True, 'blockedWords': [], 'phrases': ['你好！', '謝謝！', '一起走吧', '等我一下', '好喔', '哈哈哈', '加油！', '掰掰～'],
+        'nameTags': True, 'soloMaps': ['m-nursery'], 'welcome': '這裡是王城中央廣場。按 T 聊天、按 Y 做表情，跟其他王族打聲招呼吧。',
+        'hud': {'corner': 'bl', 'x': 1.5, 'y': 2.5, 'scale': 1, 'chip': True, 'chat': True, 'emote': True, 'friends': True, 'log': True},
+        'social': {'friends': True, 'dm': True, 'teleport': 'off', 'duel': False, 'duelParty': False}}, ensure_ascii=False, separators=(',', ':'))
+    rpg['lobby'] = json.dumps({'version': 1, 'looks': [], 'colors': True, 'eyebrow': '多人世界 · ONLINE', 'title': '和其他旅人一起冒險',
+        'note': '劇情與寵物都是你自己的，只有位置、聊天和表情會分享', 'enterLabel': '進入世界', 'soloLabel': '先單人玩', 'channelPicker': 'auto', 'mode': 'auto'},
+        ensure_ascii=False, separators=(',', ':'))
     rpg['menuUi'] = json.dumps({'preset': 'sakura', 'buttons': ['status', 'bag', 'settings', 'title']}, ensure_ascii=False)
     rpg['items'] = json.dumps([{'id': 'coin', 'name': '王室金幣', 'icon': ART['coin'], 'note': '黃金便便換來的金幣。', 'heal': 0,
                                 'bag': {'consumable': False, 'effectKind': 'none', 'effectVar': '', 'effectValue': '',
