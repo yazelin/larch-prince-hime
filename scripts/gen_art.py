@@ -43,6 +43,11 @@ OUTFIT = ('Image 1 shows our pet slime: LEFT is its everyday look, RIGHT is its 
           'The whole slime with its weapon must fit inside the frame with wide margin, square composition, single character only. ')
 
 ROUND = 'The top of the body is a smooth low round dome exactly like the slimes in image 1 (NOT pointed, NOT a teardrop, NOT taller than them). '
+# 王子／公主分化（2026-10-09）：照 image 1 左邊平常那隻，同一隻長大一點點、加上身分配件；聯動造型兩種共用，只換平常的樣子
+FORM = ('Image 1 LEFT shows our pet slime in its everyday look. Draw the SAME slime, same body shape, size, outline, glossy pearl-white mochi body '
+        '(opaque milky white, very little rainbow sheen), star-pupil sparkling eyes, small open happy mouth, rosy blush, small round nub hands, '
+        'three-quarter view facing the viewer, now dressed as ')
+
 JOBS = {
     'outfit-lubu-baihua': (['slime', 'weapons', 'lubu_baihua'], OUTFIT + 'Costume of Lu Bu from image 3 (the hundred-flower battle robe) turned into a cute slime outfit: '
                     'a short dark crimson robe-cape printed with small pale pink flower blossoms, black and gold armor trim and a black-gold waist belt, '
@@ -113,6 +118,12 @@ JOBS = {
                     'Right: a single shiny gold coin with a small crown emblem embossed on it. ' + GREEN),
     'sheet-gift': (['style'], 'One single cute game prop, three-quarter top-down view, same glossy cute rendering as the reference: a small royal gift box wrapped in cream paper '
                    'with a pink satin ribbon bow on top and a round golden wax seal with a tiny crown, a few soft sparkles around it. ' + GREEN),
+    'form-prince': (['slime'], FORM + 'a little PRINCE: the same small gold crown with a red gem a bit taller and grander, a short royal blue velvet cape with gold trim '
+                    'draped over its back and fastened at the front with a round gold clasp, deep blue eyes. Cute and dignified. Single character only, whole slime inside the frame with wide margin, square composition. '
+                    + ROUND + plate('#00FF00', 'green')),
+    'form-hime': (['slime'], FORM + 'a little PRINCESS: instead of the crown a small delicate gold tiara with a pink heart gem, a pink satin ribbon bow on one side of the head, '
+                    'a soft frilly pastel pink lace skirt-frill around the bottom of the body, warm rose-pink eyes. Cute and elegant. Single character only, whole slime inside the frame with wide margin, square composition. '
+                    + ROUND + plate('#00FF00', 'green')),   # 粉色緞帶跟洋紅幕撞色，用綠幕
 }
 
 

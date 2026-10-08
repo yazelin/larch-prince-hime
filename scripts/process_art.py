@@ -33,6 +33,7 @@ LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
 BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640, 588), 'guanyu': (581, 608), 'zhangfei': (572, 570), 'diaochan': (600, 615)}
 # 玉珮圓盤（圓心 x、y、半徑），量的是 pendant-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
 BADGE = {'lubu-baihua': (612, 1058, 53), 'liubei': (594, 991, 58), 'guanyu': (572, 1063, 52), 'zhangfei': (617, 1027, 45), 'diaochan': (707, 877, 42)}
+FORM_PX = {'prince': (790, 638), 'hime': (745, 612)}   # 分化後兩隻的身體寬與中心 x（眼睛那一列，form-*-cut.png 手量）
 ART_LEFT = {'lubu-baihua', 'lubu-heijin', 'liubei', 'guanyu'}   # 圖上朝左的造型（作者實際走過看的），其餘朝右
 # 小人大小（2026-10-08 作者要縮回正常大小，原本身體約兩格、放大後糊）：身體約一格寬。
 # 引擎顯示寬度＝sprite.scale 格（不管圖幾 px），1920 寬視窗一格約 80 螢幕 px；build.py 把 scale 設成 圖寬/80，圖 1 px＝螢幕 1 px 才不糊
@@ -178,6 +179,19 @@ def main():
         sheet.save(o); despill(o, key)
         im4 = Image.open(o); im4.save(o.with_suffix('.webp'), lossless=True)
         im4.crop((0, 0, S, S)).save(o.with_name(o.stem + '-still.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)   # 頭像用單格（選單的立繪欄會把四列整張疊著畫）
+    # 小王子／小公主（分化後平常的樣子）：跟平常那隻一樣是單列、引擎左右翻面、沒有腳下陰影，身體寬 BODY、畫布至少 DAILY
+    for name in FORM_PX:
+        raw = RAW / f'form-{name}.png'
+        if not raw.exists(): print('缺', raw.name); continue
+        cut = RAW / f'form-{name}-cut.png'
+        subprocess.run([sys.executable, str(CUT), 'key', str(raw), '-o', str(cut), '--key', 'green'], check=True, capture_output=True)
+        im = Image.open(cut).convert('RGBA'); k, cx = BODY / FORM_PX[name][0], FORM_PX[name][1]
+        arr = np.asarray(im).copy(); lab, n = ndimage.label(arr[..., 3] > 10); sizes = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
+        arr[..., 3][np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s < 200])] = 0; im = Image.fromarray(arr)   # 去背留下的零星小點
+        S = max(DAILY, int(-(-(max(extent(im, cx)) * k + 8) // 4) * 4))
+        o = OUT / f'walk/slime-{name}.png'
+        strip([ground(place(im, k, cx, S, S - 5))]).save(o); despill(o)
+        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name, 'canvas', S)
     for suffix in ('', '-still'):
         src = OUT / f'walk/slime-lubu-{LUBU}{suffix}.webp'
         if src.exists(): src.replace(OUT / f'walk/slime-lubu{suffix}.webp')
