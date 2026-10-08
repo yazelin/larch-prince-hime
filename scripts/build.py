@@ -5,7 +5,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 import sys
 from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import ui
+import ui, layout
 # 圖片網址：本機預覽用 /files/assets/（serve.py 從 dist/ 提供）；推上 Larch 用 jsDelivr，釘在已 push 的 commit SHA 上，換圖不會卡快取
 CDN_SHA = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--cdn=')), '')
 A = f'https://cdn.jsdelivr.net/gh/yazelin/larch-prince-hime@{CDN_SHA}/assets/' if CDN_SHA else '/files/assets/'
@@ -62,6 +62,7 @@ PERSIST |= CROSS_PERSIST
 OFF_HUNGER_MS, OFF_HUNGER_STEP, OFF_POOP_MS, BEAT_MS = 3600000, 10, 7200000, 60000
 AWAY_HI, AWAY_SULK, AWAY_VERY = 60, 480, 4320   # 分鐘：1 小時、8 小時、3 天
 CROSS_TEST = [x for a in sys.argv if a.startswith('--cross=') for x in a.split('=', 1)[1].split(',')]   # 測試用：假裝收藏裡已經有這些（例如 --cross=lubu）
+LAYERED = '--layered' in sys.argv   # 測試用：分層版育嬰室（art/objects_nursery.yaml，現在是單色塊驗證；作者確認、產完圖才轉正）
 AWAY_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--away=')), None)   # 測試用：假裝上次離開了幾分鐘
 if AWAY_TEST is not None:
     import time
@@ -183,7 +184,7 @@ def walls():
     return {(x, y) for x0, y0, x1, y1 in rects for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)}
 
 FRAMES = 4     # 走路圖每列幾格（process_art.HOP）
-TILE_PX = 80   # 1920 寬視窗一格約幾個螢幕 px；scale＝圖寬/TILE_PX，小人圖 1 px＝螢幕 1 px（引擎不平滑，放大會糊）
+TILE_PX = 40 if LAYERED else 80   # 分層版切成細格，一格只有原本一半寬； 1920 寬視窗一格約幾個螢幕 px；scale＝圖寬/TILE_PX，小人圖 1 px＝螢幕 1 px（引擎不平滑，放大會糊）
 
 
 def walk_sprite(key):
@@ -241,7 +242,7 @@ def nursery():
         act('random', random={'min': 1, 'max': 3, 'options': [{'id': f'r{i}', 'from': i, 'to': i, 'actions': [setv(k, True)]}
                                                              for i, k in enumerate(POOP_CELLS, 1)]}),
         loop()])
-    poops = [ev(k, x, y, pages=[{'id': 'here', 'conditions': [cond(k, True)], 'actor': 'npc', 'sprite': pic_sprite(ART['poop'], 0.8),
+    poops = [ev(k, x, y, pages=[{'id': 'here', 'conditions': [cond(k, True)], 'actor': 'npc', 'sprite': pic_sprite(ART['poop'], 1.6 if LAYERED else 0.8),
                                  'movement': 'still', 'direction': 'down', 'solid': False, 'trigger': 'touch', 'once': False, 'actions': [
                 act('sound', sound='item', audio={'url': '', 'volume': 0.8}), setv(k, False),
                 act('item', itemId='coin', itemName='王室金幣', amount=1), balloon('happy', 1600)]}])
@@ -302,6 +303,7 @@ def nursery():
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
                          'ambience': {'particles': 'sparkles', 'density': 0.3, 'rays': 0.5, 'tint': '#FFF7EE', 'tintStrength': 0.2}}}
+    if LAYERED: layered(m)
     names = list(VARS) + CROSS_VARS + [n for _, n, _, _ in RPG_VARS]
     return {'id': 'm-nursery', 'type': 'story', 'position': pos(), 'data': {
         'type': 'plugin', 'title': '皇家育嬰室', 'text': '', 'pluginId': 'larch-rpg-system', 'pluginCardId': 'map', 'pluginVersion': '0.4.0',
@@ -309,6 +311,28 @@ def nursery():
         'pluginFrame': {'showTitle': False, 'showButton': False}, 'pluginSkippable': False, 'pluginReadVars': names, 'pluginWriteVars': names,
         'pluginAssets': [], 'platforms': ['web'], 'pluginValues': {'map': json.dumps(m, ensure_ascii=False)},
         'bgm': BGM_HOME, 'bgmVolume': 0.35, 'bgmLoop': True}}
+
+def layered(m):
+    """分層版育嬰室：48×36 細格、純地面底圖、每件家具一個自由圖片事件（前後遮擋照圖框下緣排序）、碰撞照設計檔佔地格。
+    互動點與便便位置照設計檔 points；現在底圖和家具都是色塊（scripts/layout.py），產完圖換成真的。"""
+    d = layout.load('nursery'); Wn, Hn = d['map']['w'], d['map']['h']; pt = d['points']; wl = layout.walls(d)
+    real = (ROOT / 'assets/art/objects/nursery/ground.webp').exists()   # 真圖產好（scripts/map_art.py）就用真圖，否則用色塊
+    url = (lambda f: A + f'art/objects/nursery/{f}.png') if real else (lambda f: A + f'art/blocks/nursery/{f}.png')
+    m.update(width=Wn, height=Hn, picture={'url': A + 'art/objects/nursery/ground.webp' if real else url('_ground')})
+    m['layers'][0]['tiles'] = ['kn-dungeon:0' if (i % Wn, i // Wn) in wl else None for i in range(Wn * Hn)]
+    at = {'hero': pt['hero_start'], 'intro': (pt['hero_start'][0], pt['hero_start'][1] + 6), **{k: pt[k] for k in POOP_CELLS},
+          # 互動事件掛在家具的佔地格上，寵物從站點那一格靠近（站點在家具右邊或左邊一格）
+          'mirror': (4, 12), 'journal': (7, 19), 'toys': (7, 27), 'basket': (34, 12), 'gift': (41, 26)}
+    for e in m['events']:
+        if e['id'] in at: e['x'], e['y'] = at[e['id']]
+        e.pop('free', None) if e['id'] in ('basket', 'journal', 'gift') else None   # 點心籃是家具；日誌、禮物箱畫進糖果小桌、沙發（分開放會排在家具後面被蓋掉）
+    hold = [(0, y) for y in range(1, Hn)] + [(Wn - 1, y) for y in range(1, Hn)]   # 家具事件放在地圖兩邊的邊界格（每格只能一個事件）
+    obs = layout.objects(d); assert len(hold) >= len(obs)
+    m['events'] += [ev(f'obj-{i}', *hold[i], name=o['name'], free={'url': url(o['name']), 'x': o['frame'][0], 'y': o['frame'][1], 'w': o['frame'][2], 'h': o['frame'][3]})
+                    for i, o in enumerate(obs)]
+    taken = {}
+    for e in m['events']: assert (e['x'], e['y']) not in taken, f"{e['id']} 跟 {taken.get((e['x'], e['y']))} 同一格"; taken[(e['x'], e['y'])] = e['id']
+
 
 def clock_plugin():
     """看不見的時鐘 HUD：記最後在場時間，讀檔時補上離線期間的飢餓與便便。直接寫 playback，玩家不必安裝。"""
@@ -325,7 +349,7 @@ def database():
     def actor(id, sprite, role='party'):
         walk = walk_sprite(sprite)
         return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART.get(sprite + '-still', ART[sprite]),   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
-                'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
+                'kit': 'none', 'rig': 'slime', 'joinVariable': '', **({'speed': 2} if LAYERED else {})}   # 細格一步只有半格，速度加倍手感不變
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
             'actors': [actor('ph', 'slime')] + [actor(aid, spr, 'npc') for aid, _, spr in OUTFITS.values()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
