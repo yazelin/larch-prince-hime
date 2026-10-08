@@ -118,12 +118,12 @@ def premul_resize(im, sz):
 
 
 def fit(fig, fw, fh, fill_w=False):
-    """等比縮進 fw×fh 格的圖框；下緣貼齊（＝佔地最下一列的下緣）、水平置中；一長排的拉滿寬度，太高就切頂"""
+    """等比縮進 fw×fh 格的圖框；下緣貼齊（＝佔地最下一列的下緣）、水平置中；一長排的拉滿寬度，太高就報錯（2026-10-09 作者：欄杆兩端的花和柱頂被切掉）"""
     W, Hh = fw * PX, fh * PX
     s = W / fig.width if fill_w else min(W / fig.width, Hh / fig.height)
     nw, nh = max(1, round(fig.width * s)), max(1, round(fig.height * s))
     f = premul_resize(fig, (nw, nh))
-    if nh > Hh: f = f.crop((0, nh - Hh, nw, nh)); nh = Hh
+    assert nh <= Hh, f'圖比圖框高 {nh}>{Hh}px，設計檔的 up 要加高（裁掉會切到盆栽和欄柱頂）'
     c = Image.new('RGBA', (W, Hh)); c.alpha_composite(f, ((W - nw) // 2, Hh - nh)); return c
 
 
