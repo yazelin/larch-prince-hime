@@ -48,6 +48,7 @@ def main(summary):
     (ROOT / f'snapshots/push_{int(time.time())}.json').write_text(json.dumps(live, ensure_ascii=False))
     p = json.loads(json.dumps(live))
     for k in ('boards', 'nodes', 'edges', 'variables', 'activeBoardId'): p[k] = built[k]
+    p['description'] = (ROOT / 'listing/description.txt').read_text().strip()   # 市集發佈視窗預設帶專案簡介；舊的企劃版寫了沒做的功能（多人決鬥等）
     for k in OWNED_SETTINGS: p['settings'][k] = built['settings'][k]
     for k in OWNED_PLUGINS: p['settings'].setdefault('plugins', {})[k] = built['settings']['plugins'][k]
     etag, _ = req('PUT', {'project': p, 'summary': summary}, etag)
