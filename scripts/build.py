@@ -62,7 +62,7 @@ PERSIST |= CROSS_PERSIST
 OFF_HUNGER_MS, OFF_HUNGER_STEP, OFF_POOP_MS, BEAT_MS = 3600000, 10, 7200000, 60000
 AWAY_HI, AWAY_SULK, AWAY_VERY = 60, 480, 4320   # 分鐘：1 小時、8 小時、3 天
 CROSS_TEST = [x for a in sys.argv if a.startswith('--cross=') for x in a.split('=', 1)[1].split(',')]   # 測試用：假裝收藏裡已經有這些（例如 --cross=lubu）
-LAYERED = '--layered' in sys.argv   # 測試用：分層版育嬰室（art/objects_nursery.yaml，現在是單色塊驗證；作者確認、產完圖才轉正）
+LAYERED = '--old-map' not in sys.argv   # 分層版育嬰室（art/objects_nursery.yaml，2026-10-08 作者確認轉正）；--old-map 回到舊整張地圖
 AWAY_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--away=')), None)   # 測試用：假裝上次離開了幾分鐘
 if AWAY_TEST is not None:
     import time

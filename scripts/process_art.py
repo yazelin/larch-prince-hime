@@ -46,6 +46,11 @@ def extent(im, cx):
     return 2 * max(cx - xs.min(), xs.max() - cx), ys.max() - ys.min() + 1
 
 
+# 造型是四列走路圖，引擎會在腳下畫陰影（rows===4 才畫；中心在格子 0.93 處、寬只有約 0.7 格，細格地圖上更小）。
+# 身體底留 7px 會像浮在陰影上（2026-10-08 作者：換完造型陰影離得更遠）→ 造型只留 2px，身體壓在陰影中心
+SHADOW_GAP = 2
+
+
 def ground(f, gap=7):
     """整張上下平移，讓身體底部（中間六成寬每一欄最低點的中位數，細的兵器桿、流蘇不算）離畫布底邊 gap px，
     跟平常那隻一樣；本來用最低的像素對齊，兵器尾端比身體低的那幾隻就浮起來。比身體低超過 gap 的兵器尾端會被裁掉。"""
@@ -167,7 +172,7 @@ def main():
     for name, (im, key) in cuts.items():
         o = OUT / f'walk/slime-{name}.png'
         k, cx = BODY / body[name][0], body[name][1]
-        own = ground(place(im, k, cx, S, S - 5)); other = ground(place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5))
+        own = ground(place(im, k, cx, S, S - 5), SHADOW_GAP); other = ground(place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5), SHADOW_GAP)
         left, right = (own, other) if name in ART_LEFT else (other, own)
         sheet = strip([own, left, right, own])   # 列序＝下、左、右、上
         sheet.save(o); despill(o, key)
