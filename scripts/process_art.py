@@ -28,11 +28,11 @@ def square(im, pad=0.06):
 LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
 
 
-# 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是去背後的 badge-*-cut.png（黑金呂布是 outfit-*-cut.png，1254px）。
+# 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是去背後的 pendant-*-cut.png（玉珮版沒動構圖，跟 outfit-*-cut.png 一樣；1254px）。
 # ponytail: 手量的校正表；自動量會被兵器桿、髮繩、披風干擾（試過兩種都差到 3 成）。重產哪張就重量哪張
-BODY_PX = {'lubu-baihua': (530, 571), 'lubu-heijin': (540, 520), 'liubei': (633, 624), 'guanyu': (580, 602), 'zhangfei': (549, 586), 'diaochan': (552, 555)}
-# 徽章外圈（圓心 x、y、半徑），量的是 badge-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
-BADGE = {'lubu-baihua': (551, 998, 107), 'liubei': (586, 923, 110), 'guanyu': (537, 977, 93), 'zhangfei': (639, 952, 95), 'diaochan': (689, 809, 109)}
+BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640, 588), 'guanyu': (581, 608), 'zhangfei': (572, 570), 'diaochan': (600, 615)}
+# 玉珮圓盤（圓心 x、y、半徑），量的是 pendant-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
+BADGE = {'lubu-baihua': (612, 1058, 53), 'liubei': (594, 991, 58), 'guanyu': (572, 1063, 52), 'zhangfei': (617, 1027, 45), 'diaochan': (707, 877, 42)}
 ART_LEFT = {'lubu-baihua', 'lubu-heijin', 'liubei', 'guanyu'}   # 圖上朝左的造型（作者實際走過看的），其餘朝右
 BODY = 88   # 平常那隻 128px 小人身體的寬度，造型都縮到一樣寬
 
@@ -41,6 +41,14 @@ def extent(im, cx):
     """以身體中心為準，左右各要多寬（取大的一邊×2）與整體高度。"""
     ys, xs = np.where(np.asarray(im)[..., 3] > 10)
     return 2 * max(cx - xs.min(), xs.max() - cx), ys.max() - ys.min() + 1
+
+
+def ground(f, gap=8):
+    """整張上下平移，讓身體底部（中間六成寬每一欄最低點的中位數，細的兵器桿、流蘇不算）離畫布底邊 gap px，
+    跟平常那隻一樣；本來用最低的像素對齊，兵器尾端比身體低的那幾隻就浮起來。比身體低超過 gap 的兵器尾端會被裁掉。"""
+    a = np.asarray(f)[..., 3] > 128; S = f.width
+    low = [np.where(a[:, x])[0].max() for x in range(int(S / 2 - 0.3 * BODY), int(S / 2 + 0.3 * BODY)) if a[:, x].any()]
+    g = Image.new('RGBA', f.size); g.alpha_composite(f, (0, f.height - 1 - gap - int(np.median(low)))); return g
 
 
 def mirror(im, badge):
@@ -117,7 +125,7 @@ def main():
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
     for name, key in (('lubu-baihua', 'green'), ('lubu-heijin', 'green'), ('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green'), ('diaochan', 'green')):
-        raw = RAW / f'badge-{name}.png'   # 加了姓氏徽章的版本（沒有就用原圖，例如黑金呂布）
+        raw = RAW / f'pendant-{name}.png'   # 加了姓氏玉珮的版本（沒有就用原圖，例如黑金呂布）
         if not raw.exists(): raw = RAW / f'outfit-{name}.png'
         if not raw.exists(): print('缺', raw.name); continue
         cut = RAW / f'{raw.stem}-cut.png'
@@ -132,7 +140,7 @@ def main():
     for name, (im, key) in cuts.items():
         o = OUT / f'walk/slime-{name}.png'
         k, cx = BODY / body[name][0], body[name][1]
-        own = place(im, k, cx, S, S - 5); other = place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5)
+        own = ground(place(im, k, cx, S, S - 5)); other = ground(place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5))
         left, right = (own, other) if name in ART_LEFT else (other, own)
         sheet = Image.new('RGBA', (S, 4 * S)); [sheet.paste(f, (0, i * S)) for i, f in enumerate((own, left, right, own))]   # 列序＝下、左、右、上
         sheet.save(o); despill(o, key)

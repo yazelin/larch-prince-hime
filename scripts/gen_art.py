@@ -75,14 +75,16 @@ JOBS = {
                         'a small dark brown hair bun on top with a delicate silver hairpin and tiny dangling ornament, dark brown eyes, gentle shy smile. '
                         'No weapon. Instead one nub hand holds up the handkerchief from image 3 beside the body: a small square of white silk with red plum blossoms '
                         'embroidered in one corner and a red tassel with a white jade bead hanging from that corner. ' + ROUND + plate('#00FF00', 'green')),
-    # 姓氏徽章：縮到地圖大小只認得出「奶白圓球＋大兵器」，作者要一個明顯的標誌（2026-10-08 拍板用姓氏大字）
-    **{f'badge-{n}': ([f'raw-{n}'], 'Edit image 1. Keep EVERYTHING exactly the same: the slime, face, costume, hair, weapon, pose, colors, framing and the flat '
-                      f'background color. Only ADD one large round badge on the front of the costume just below the face, centered (it may cover the belt buckle): '
-                      f'a thick polished gold rim around a {bg} disc with the single Traditional Chinese character 「{ch}」 in bold {fg} brush calligraphy filling the disc. '
-                      'The badge is big and clearly readable, about one third of the body width, facing the viewer. The character must be exactly '
-                      f'「{ch}」, written correctly, no other text anywhere.')
-       for n, ch, bg, fg in (('lubu-baihua', '呂', 'deep crimson red', 'gold'), ('liubei', '劉', 'deep green', 'gold'), ('guanyu', '關', 'deep green', 'gold'),
-                             ('zhangfei', '張', 'black', 'gold'), ('diaochan', '貂', 'pale lavender', 'deep purple'))},
+    # 姓氏玉珮：縮到地圖大小只認得出「奶白圓球＋大兵器」，作者要一個明顯的標誌；大字胸章作者嫌廉價，2026-10-08 改成腰間垂掛的雕花玉珮
+    **{f'pendant-{n}': ([f'raw-{n}'], 'Edit image 1. Keep EVERYTHING exactly the same: the slime, face, costume, hair, weapon, pose, colors, framing, size and the flat '
+                        f'background color. Only ADD one elegant noble pendant hanging from the front center of the waist belt: a small round {mat} disc pendant '
+                        f'with a finely carved gold filigree rim of cloud scrolls, the single Traditional Chinese character 「{ch}」 carved in delicate low relief in its center '
+                        f'(small, refined, like an heirloom seal, NOT a big sign), hanging on a short {cord} cord with a knot, and a long silky {cord} tassel below it. '
+                        'Luxurious, precious, jewelry quality. The pendant is about one quarter of the body width. The character must be exactly '
+                        f'「{ch}」, written correctly, no other text anywhere.')
+       for n, ch, mat, cord in (('lubu-baihua', '呂', 'polished gold with a crimson enamel center', 'crimson red'), ('liubei', '劉', 'white jade', 'jade green'),
+                                ('guanyu', '關', 'deep green jade', 'crimson red'), ('zhangfei', '張', 'black onyx with gold', 'crimson red'),
+                                ('diaochan', '貂', 'pale lavender jade', 'soft purple'))},
     'bg-capital': (['scene'], 'A floating cloud kingdom seen from a distance in the morning: white castle towers and small houses on floating islands among soft clouds, '
                    'and in the very center a huge gentle tree of life with pale golden leaves; hanging from one branch is a single small translucent rainbow jelly egg '
                    'with a tiny golden crown on top. ' + SCENE),
