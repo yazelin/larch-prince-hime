@@ -30,7 +30,7 @@ LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
 
 # 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是 art/raw/outfit-*-cut.png（1254px）。
 # ponytail: 手量的校正表；自動量會被兵器桿、髮繩、披風干擾（試過兩種都差到 3 成）。重產哪張就重量哪張
-BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (700, 614), 'guanyu': (514, 582), 'zhangfei': (572, 570)}
+BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640, 588), 'guanyu': (514, 582), 'zhangfei': (572, 570)}
 BODY = 88   # 平常那隻 128px 小人身體的寬度，造型都縮到一樣寬
 
 

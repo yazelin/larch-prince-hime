@@ -55,8 +55,9 @@ JOBS = {
     'outfit-liubei': (['slime', 'weapons', 'liubei_armor', 'liubei_pose'], OUTFIT + 'Costume of Liu Bei from image 3 (her short battle armor) turned into a cute slime outfit: '
                       'a small green metal chest plate, ONE green shoulder guard on the slime\'s left side only, small green bracers on both nub hands, '
                       'a short white single-layer skirt with green-trimmed belt around the lower body, a light green ribbon tying a small black hair tuft at the back, warm brown eyes. '
-                      'Weapon and pose like Liu Bei in image 4: the twin swords of Liu Bei exactly as in image 2 (third from left, two straight double-edged jian swords with gold guards and '
-                      'dark green grips), drawn, ONE sword gripped in EACH nub hand, the two blades crossed in an X in front of the lower body, tips pointing outward. ' + ROUND + plate('#0000FF', 'blue')),
+                      'Weapon like Liu Bei in image 4: the twin swords of Liu Bei exactly as in image 2 (third from left, two straight double-edged jian swords with gold guards and '
+                      'dark green grips), drawn, ONE sword in EACH nub hand: the left hand on the left side of the body and the right hand on the right side, each nub hand wrapped firmly around its sword grip, '
+                      'both swords held upright and parallel with blades pointing straight up beside the body, the swords do NOT cross and do NOT overlap the face or body. ' + ROUND + plate('#0000FF', 'blue')),
     'outfit-guanyu': (['slime', 'weapons', 'guanyu_armor'], OUTFIT + 'Costume of Guan Yu from image 3 (her battle armor) turned into a cute slime outfit: '
                       'a deep green fitted robe-armor with gold dragon embroidery and a gold waist belt with a small red knot, ONE ornate gold shoulder guard, '
                       'a long red cape with gold trim flowing behind, a very long black braid with a red tassel hanging down one side, amber eyes with a slightly proud brave look but still smiling. '
