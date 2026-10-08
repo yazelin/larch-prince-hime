@@ -182,13 +182,14 @@ def walls():
              (0, 16, 9, 17), (15, 16, 23, 17), (10, 17, 14, 17)]   # 下緣欄杆；(10..14,16) 是門口地墊，之後接別的地圖
     return {(x, y) for x0, y0, x1, y1 in rects for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)}
 
+FRAMES = 4     # 走路圖每列幾格（process_art.HOP）
 TILE_PX = 80   # 1920 寬視窗一格約幾個螢幕 px；scale＝圖寬/TILE_PX，小人圖 1 px＝螢幕 1 px（引擎不平滑，放大會糊）
 
 
 def walk_sprite(key):
-    w, h = Image.open(ROOT / 'assets/art' / ART[key].split('art/', 1)[1]).size
-    rows = h // w   # 造型小人是四列（下、左、右、上）：引擎遇到四列就不翻面，玉珮上的字才不會變鏡像字
-    return {'url': ART[key], 'width': w, 'height': h // rows, 'frames': 1, 'rows': rows, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0,
+    W, H = Image.open(ROOT / 'assets/art' / ART[key].split('art/', 1)[1]).size
+    w = W // FRAMES; rows = H // w   # 每列 FRAMES 格（走路時輪播的果凍彈跳）；造型小人是四列（下、左、右、上），引擎遇到四列就不翻面，玉珮上的字才不會變鏡像字
+    return {'url': ART[key], 'width': w, 'height': w, 'frames': FRAMES, 'rows': rows, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0,
             'scale': round(w / TILE_PX, 3), 'faces': 'right'}   # 引擎顯示寬度＝scale 格，跟圖幾 px 無關
 
 

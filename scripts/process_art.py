@@ -54,6 +54,30 @@ def ground(f, gap=7):
     g = Image.new('RGBA', f.size); g.alpha_composite(f, (0, f.height - 1 - gap - int(np.median(low)))); return g
 
 
+# 走路動畫：引擎移動時輪播同一列的幾格，停下來看 idleFrame（第 1 格）。果凍彈跳＝原樣→壓扁→拉高往上跳→離地一點
+# ponytail: 用同一張圖縮放位移做四格，沒有重新生圖；要更生動（眨眼、晃王冠）再畫真的走路格
+HOP = ((1, 1, 0), (1.08, .9, 0), (.95, 1.07, .035), (1, 1, .015))   # (寬倍率, 高倍率, 往上跳幾成畫布)
+
+
+def hop(f):
+    """一格變四格：以底邊中點為準縮放，再往上提。"""
+    ys, xs = np.where(np.asarray(f)[..., 3] > 10); S = f.width
+    box = f.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)); cx = (xs.min() + xs.max() + 1) / 2
+    out = []
+    for sx, sy, lift in HOP:
+        r = resize_pm(box, (round(box.width * sx), round(box.height * sy)))
+        g = Image.new('RGBA', f.size); g.alpha_composite(r, (round(cx - (cx - xs.min()) * sx), ys.max() + 1 - r.height - round(lift * S))); out.append(g)
+    return out
+
+
+def strip(rows):
+    """每列一個方向、每列四格（HOP）。"""
+    S = rows[0].width; sheet = Image.new('RGBA', (S * len(HOP), S * len(rows)))
+    for j, f in enumerate(rows):
+        for i, g in enumerate(hop(f)): sheet.paste(g, (i * S, j * S))
+    return sheet
+
+
 def mirror(im, badge):
     """左右翻面，但徽章那一圈貼回沒翻過的原樣（徽章是圓的，翻不翻外形都一樣，只有字會反）。"""
     f = im.transpose(Image.FLIP_LEFT_RIGHT)
@@ -123,7 +147,7 @@ def main():
     cut_sheet('sheet-gift', [('props/gift.webp', 256)])
     for name, src in (('slime-daily', 'sprite-test-daily'),):   # 平常的地圖小人（呂布造型改走下面的聯動造型）
         o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
-        resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (DAILY, DAILY)).save(o); despill(o)
+        strip([resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (DAILY, DAILY))]).save(o); despill(o)
         Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
@@ -145,7 +169,7 @@ def main():
         k, cx = BODY / body[name][0], body[name][1]
         own = ground(place(im, k, cx, S, S - 5)); other = ground(place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5))
         left, right = (own, other) if name in ART_LEFT else (other, own)
-        sheet = Image.new('RGBA', (S, 4 * S)); [sheet.paste(f, (0, i * S)) for i, f in enumerate((own, left, right, own))]   # 列序＝下、左、右、上
+        sheet = strip([own, left, right, own])   # 列序＝下、左、右、上
         sheet.save(o); despill(o, key)
         im4 = Image.open(o); im4.save(o.with_suffix('.webp'), lossless=True)
         im4.crop((0, 0, S, S)).save(o.with_name(o.stem + '-still.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)   # 頭像用單格（選單的立繪欄會把四列整張疊著畫）
