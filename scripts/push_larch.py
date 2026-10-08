@@ -63,7 +63,8 @@ def main(summary):
         assert c(qb[b['id']]['nodes']) == c(b['nodes']) and c(qb[b['id']]['edges']) == c(b['edges']), f'白板 {b["id"]} 讀回來不一樣'
     for k in OWNED_SETTINGS: assert c(q['settings'].get(k)) == c(built['settings'][k]), k
     for k in OWNED_PLUGINS: assert c(q['settings']['plugins'].get(k)) == c(built['settings']['plugins'][k]), f'插件設定 {k}'
-    for k in ('name', 'description'): assert c(q.get(k)) == c(live.get(k)), f'{k} 被改到了'
+    assert c(q.get('name')) == c(live.get('name')), 'name 被改到了'
+    assert q.get('description') == p['description'], '簡介沒寫進去'
     print('OK 推上 Larch：', len(built['nodes']), '張卡，讀回比對一致')
 
 
