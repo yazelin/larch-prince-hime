@@ -348,7 +348,9 @@ def nursery():
          'trigger': 'action', 'once': False, 'actions': [act('choice', text='要出發去競技場嗎？', speaker='narrator', choice={'cancel': 'wait', 'options': [
              {'id': 'go', 'label': '出發', 'actions': [act('jump', cardId='a-arena')]}, {'id': 'wait', 'label': '再等一下', 'actions': []}]})]},
         {'id': 'done', 'conditions': [cond('adult', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
-         'trigger': 'action', 'once': False, 'actions': [say('門外是王宮的長廊。{{pet_name}}的成年禮已經辦完了，今天就待在育嬰室吧。')]}])
+         'trigger': 'action', 'once': False, 'actions': [act('choice', text='要去王城中央廣場走走嗎？', speaker='narrator', choice={'cancel': 'stay', 'options': [
+             {'id': 'go', 'label': '去廣場', 'actions': [act('jump', cardId='m-plaza', arrive={'x': 24, 'y': 32, 'direction': 'up'})]},
+             {'id': 'stay', 'label': '待在育嬰室', 'actions': []}]})]}])
     # 平常的樣子：進地圖時（auto）與從穿衣鏡換回平常時（condition，看 base_ok）都換成分化後那隻
     bases = [ev(f'base-{f}', 6 + i, 1, trigger='auto', conditions=[cond('outfit', ''), cond('form', f)], actions=[act('hero', value=aid), setv('base_ok', True)])
              for i, (f, (aid, _, _)) in enumerate(FORMS.items())] + [
@@ -394,15 +396,15 @@ def nursery():
         'pluginAssets': [], 'platforms': ['web'], 'pluginValues': {'map': json.dumps(m, ensure_ascii=False)},
         'bgm': BGM_HOME, 'bgmVolume': 0.35, 'bgmLoop': True}}
 
-def layered(m):
-    """分層版育嬰室：48×36 細格、純地面底圖、每件家具一個自由圖片事件（前後遮擋照圖框下緣排序）、碰撞照設計檔佔地格。
-    互動點與便便位置照設計檔 points；現在底圖和家具都是色塊（scripts/layout.py），產完圖換成真的。"""
-    d = layout.load('nursery'); Wn, Hn = d['map']['w'], d['map']['h']; pt = d['points']; wl = layout.walls(d)
-    real = (ROOT / 'assets/art/objects/nursery/ground.webp').exists()   # 真圖產好（scripts/map_art.py）就用真圖，否則用色塊
-    url = (lambda f: A + f'art/objects/nursery/{f}.png') if real else (lambda f: A + f'art/blocks/nursery/{f}.png')
-    m.update(width=Wn, height=Hn, picture={'url': A + 'art/objects/nursery/ground.webp' if real else url('_ground')})
+def layered(m, name='nursery'):
+    """分層地圖：48×36 細格、純地面底圖、每件家具一個自由圖片事件（前後遮擋照圖框下緣排序）、碰撞照設計檔佔地格。
+    底圖和家具：真圖產好（scripts/map_art.py）就用真圖，否則用色塊（scripts/layout.py）。育嬰室另外把互動點搬到設計檔的位置。"""
+    d = layout.load(name); Wn, Hn = d['map']['w'], d['map']['h']; pt = d['points']; wl = layout.walls(d)
+    real = (ROOT / f'assets/art/objects/{name}/ground.webp').exists()
+    url = (lambda f: A + f'art/objects/{name}/{f}.png') if real else (lambda f: A + f'art/blocks/{name}/{f}.png')
+    m.update(width=Wn, height=Hn, picture={'url': A + f'art/objects/{name}/ground.webp' if real else url('_ground')})
     m['layers'][0]['tiles'] = ['kn-dungeon:0' if (i % Wn, i // Wn) in wl else None for i in range(Wn * Hn)]
-    at = {'hero': pt['hero_start'], 'intro': (pt['hero_start'][0], pt['hero_start'][1] + 6), **{k: pt[k] for k in POOP_CELLS},
+    at = {} if name != 'nursery' else {'hero': pt['hero_start'], 'intro': (pt['hero_start'][0], pt['hero_start'][1] + 6), **{k: pt[k] for k in POOP_CELLS},
           # 互動事件掛在家具的佔地格上，寵物從站點那一格靠近（站點在家具右邊或左邊一格）
           'mirror': (4, 12), 'journal': (7, 19), 'toys': (7, 27), 'basket': (34, 12), 'gift': (41, 26), 'door': (24, 35)}
     for e in m['events']:
@@ -414,6 +416,29 @@ def layered(m):
                     for i, o in enumerate(obs)]
     taken = {}
     for e in m['events']: assert (e['x'], e['y']) not in taken, f"{e['id']} 跟 {taken.get((e['x'], e['y']))} 同一格"; taken[(e['x'], e['y'])] = e['id']
+
+
+def plaza():
+    """王城中央廣場（成年後從育嬰室門口來；多人連線開在這張）。設計在 art/objects_plaza.yaml，現在是色塊。"""
+    d = layout.load('plaza'); pt = d['points']
+    hero = ev('hero', *pt['plaza_arrive'], name='王子姬', actor='player', direction='up', sprite=walk_sprite('slime'))
+    out = ev('exit', *pt['plaza_exit'], trigger='touch', marker={'label': '回育嬰室', 'kind': 'exit'},
+             actions=[act('jump', cardId='m-nursery', arrive={'x': 24, 'y': 33, 'direction': 'up'})])
+    m = {'version': 1, 'name': '王城中央廣場', 'width': 48, 'height': 36, 'tileSize': 48,
+         'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
+         'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False, 'tiles': []}],
+         'events': [hero, out], 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
+         'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
+                         'ambience': {'particles': 'petals', 'density': 0.25, 'rays': 0.3, 'clouds': 0.3, 'critters': 'butterflies'}}}
+    layered(m, 'plaza')
+    names = list(VARS) + CROSS_VARS + [n for _, n, _, _ in RPG_VARS]
+    return {'id': 'm-plaza', 'type': 'story', 'position': pos(), 'data': {
+        'type': 'plugin', 'title': '王城中央廣場', 'text': '', 'pluginId': 'larch-rpg-system', 'pluginCardId': 'map', 'pluginVersion': '0.4.0',
+        'pluginName': 'RPG 系統', 'pluginCardName': 'RPG 地圖', 'pluginIcon': 'map', 'pluginColor': '#4a7358', 'pluginPresentation': 'fullscreen',
+        'pluginFrame': {'showTitle': False, 'showButton': False}, 'pluginSkippable': False, 'pluginReadVars': names, 'pluginWriteVars': names,
+        'pluginAssets': [], 'platforms': ['web'], 'pluginValues': {'map': json.dumps(m, ensure_ascii=False)},
+        'bgm': BGM_STORY, 'bgmVolume': 0.35, 'bgmLoop': True}}
 
 
 def clock_plugin():
@@ -444,7 +469,7 @@ def build():
     for c in CHOICES:
         N.append(choice_card(*c))
         E += [edge(c[0], dst, f'choice-{i}') for i, (_, dst) in enumerate(c[4])]
-    N.append(nursery())
+    N.append(nursery()); N.append(plaza())
     # 開機分流（起點）：有條件的線先判，第一條無條件的當預設。同一出口兩條線，推送一定要走 PUT board（整包 PUT 會去重）
     N.insert(0, {'id': 'route', 'type': 'story', 'position': {'x': -400, 'y': 0}, 'data': {'type': 'setVariable', 'title': '開機分流', 'text': '', 'start': True,
                  'variableOps': [{'id': 'route-0', 'variable': 'booted', 'kind': 'set', 'value': 'true'}]}})
