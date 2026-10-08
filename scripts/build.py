@@ -159,7 +159,7 @@ def waits(ms):   # wait 步驟上限 9999 毫秒，長的等待拆成幾段
     return [act('wait', amount=min(9999, ms - i)) for i in range(0, ms, 9999)]
 def addv(k, n): return act('variable', variable=k, value=str(abs(n)), op='add' if n >= 0 else 'subtract')
 def balloon(icon, ms=2400): return act('balloon', balloon={'icon': icon, 'target': 'player', 'durationMs': ms})
-def pic_sprite(url, scale): return {'url': url, 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': scale}
+def pic_sprite(url, scale, px=64): return {'url': url, 'width': px, 'height': px, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': scale}
 def cond(k, v, op='eq'): return {'kind': 'variable', 'variable': k, 'op': op, 'value': str(v).lower() if isinstance(v, bool) else str(v), 'itemId': '', 'count': 1}
 INVISIBLE = {'url': '', 'width': 32, 'height': 32, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0}
 def ev(id, x, y, **kw):
@@ -180,11 +180,21 @@ def walls():
              (0, 16, 9, 17), (15, 16, 23, 17), (10, 17, 14, 17)]   # 下緣欄杆；(10..14,16) 是門口地墊，之後接別的地圖
     return {(x, y) for x0, y0, x1, y1 in rects for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)}
 
+TILE_PX = 80   # 1920 寬視窗一格約幾個螢幕 px；scale＝圖寬/TILE_PX，小人圖 1 px＝螢幕 1 px（引擎不平滑，放大會糊）
+
+
+def walk_sprite(key):
+    w, h = Image.open(ROOT / 'assets/art' / ART[key].split('art/', 1)[1]).size
+    rows = h // w   # 造型小人是四列（下、左、右、上）：引擎遇到四列就不翻面，玉珮上的字才不會變鏡像字
+    return {'url': ART[key], 'width': w, 'height': h // rows, 'frames': 1, 'rows': rows, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0,
+            'scale': round(w / TILE_PX, 3), 'faces': 'right'}   # 引擎顯示寬度＝scale 格，跟圖幾 px 無關
+
+
 def nursery():
     # 主角事件不綁 actorId：引擎畫的是資料庫 heroId 那位，hero 步驟換人（換裝）地圖上才會跟著換。sprite 只是佔位（照《無雙》的寫法）
     # 主角：引擎畫資料庫 heroId 那位（換裝＝hero 步驟換人）；事件上的 sprite 是資料庫讀不到時的備用
     hero = ev('hero', 12, 9, name='王子姬', actor='player', direction='down',
-              sprite={'url': ART['slime'], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'})
+              sprite=walk_sprite('slime'))
     intro = ev('intro', 12, 12, trigger='auto', once=True, conditions=[cond('intro_done', True, 'neq')], actions=[
         act('name', text='幫牠取個名字吧。', naming={'who': '', 'max': 8}),
         say('噗啾！', speaker='player', pres='bubble'),
@@ -228,7 +238,7 @@ def nursery():
         act('random', random={'min': 1, 'max': 3, 'options': [{'id': f'r{i}', 'from': i, 'to': i, 'actions': [setv(k, True)]}
                                                              for i, k in enumerate(POOP_CELLS, 1)]}),
         loop()])
-    poops = [ev(k, x, y, pages=[{'id': 'here', 'conditions': [cond(k, True)], 'actor': 'npc', 'sprite': pic_sprite(ART['poop'], 1.6),
+    poops = [ev(k, x, y, pages=[{'id': 'here', 'conditions': [cond(k, True)], 'actor': 'npc', 'sprite': pic_sprite(ART['poop'], 0.8),
                                  'movement': 'still', 'direction': 'down', 'solid': False, 'trigger': 'touch', 'once': False, 'actions': [
                 act('sound', sound='item', audio={'url': '', 'volume': 0.8}), setv(k, False),
                 act('item', itemId='coin', itemName='王室金幣', amount=1), balloon('happy', 1600)]}])
@@ -310,9 +320,7 @@ def clock_plugin():
 
 def database():
     def actor(id, sprite, role='party'):
-        w, h = Image.open(ROOT / 'assets/art' / ART[sprite].split('art/', 1)[1]).size   # 造型小人畫布比 128 大（要裝兵器），寬高照圖檔
-        rows = h // w   # 造型小人是四列（下、左、右、上）：引擎遇到四列就不翻面，徽章上的字才不會變鏡像字
-        walk = {'url': ART[sprite], 'width': w, 'height': h // rows, 'frames': 1, 'rows': rows, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3 * w / 128, 'faces': 'right'}   # 引擎會把大畫布縮回同一個框，scale 照畫布比例放大，身體才跟平常那隻一樣大
+        walk = walk_sprite(sprite)
         return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
                 'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）

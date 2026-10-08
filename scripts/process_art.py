@@ -34,7 +34,10 @@ BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640,
 # 玉珮圓盤（圓心 x、y、半徑），量的是 pendant-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
 BADGE = {'lubu-baihua': (612, 1058, 53), 'liubei': (594, 991, 58), 'guanyu': (572, 1063, 52), 'zhangfei': (617, 1027, 45), 'diaochan': (707, 877, 42)}
 ART_LEFT = {'lubu-baihua', 'lubu-heijin', 'liubei', 'guanyu'}   # 圖上朝左的造型（作者實際走過看的），其餘朝右
-BODY = 88   # 平常那隻 128px 小人身體的寬度，造型都縮到一樣寬
+# 小人大小（2026-10-08 作者要縮回正常大小，原本身體約兩格、放大後糊）：身體約一格寬。
+# 引擎顯示寬度＝sprite.scale 格（不管圖幾 px），1920 寬視窗一格約 80 螢幕 px；build.py 把 scale 設成 圖寬/80，圖 1 px＝螢幕 1 px 才不糊
+DAILY = 116   # 平常那隻的圖寬（原圖身體佔 88/128）
+BODY = 80     # 身體寬度，造型都縮到一樣寬
 
 
 def extent(im, cx):
@@ -43,7 +46,7 @@ def extent(im, cx):
     return 2 * max(cx - xs.min(), xs.max() - cx), ys.max() - ys.min() + 1
 
 
-def ground(f, gap=8):
+def ground(f, gap=7):
     """整張上下平移，讓身體底部（中間六成寬每一欄最低點的中位數，細的兵器桿、流蘇不算）離畫布底邊 gap px，
     跟平常那隻一樣；本來用最低的像素對齊，兵器尾端比身體低的那幾隻就浮起來。比身體低超過 gap 的兵器尾端會被裁掉。"""
     a = np.asarray(f)[..., 3] > 128; S = f.width
@@ -116,11 +119,11 @@ def main():
             if size: part = resize_pm(square(part), (size, size))
             o = OUT / name; o.parent.mkdir(parents=True, exist_ok=True); part.save(o); despill(o)
             w = o.with_suffix('.webp'); Image.open(o).save(w, quality=90); o.unlink(); print('ok', w.name, part.size)   # 帶透明的 webp，比 png 小很多
-    cut_sheet('sheet-props', [('props/basket.webp', 256), ('props/poop.webp', 128), ('props/coin.webp', 128)])
+    cut_sheet('sheet-props', [('props/basket.webp', 256), ('props/poop.webp', 64), ('props/coin.webp', 128)])
     cut_sheet('sheet-gift', [('props/gift.webp', 256)])
     for name, src in (('slime-daily', 'sprite-test-daily'),):   # 平常的地圖小人（呂布造型改走下面的聯動造型）
         o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
-        resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (128, 128)).save(o); despill(o)
+        resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (DAILY, DAILY)).save(o); despill(o)
         Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
