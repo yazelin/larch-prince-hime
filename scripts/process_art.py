@@ -147,8 +147,11 @@ def main():
         left, right = (own, other) if name in ART_LEFT else (other, own)
         sheet = Image.new('RGBA', (S, 4 * S)); [sheet.paste(f, (0, i * S)) for i, f in enumerate((own, left, right, own))]   # 列序＝下、左、右、上
         sheet.save(o); despill(o, key)
-        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)
-    (OUT / f'walk/slime-lubu-{LUBU}.webp').replace(OUT / 'walk/slime-lubu.webp') if (OUT / f'walk/slime-lubu-{LUBU}.webp').exists() else None
+        im4 = Image.open(o); im4.save(o.with_suffix('.webp'), lossless=True)
+        im4.crop((0, 0, S, S)).save(o.with_name(o.stem + '-still.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)   # 頭像用單格（選單的立繪欄會把四列整張疊著畫）
+    for suffix in ('', '-still'):
+        src = OUT / f'walk/slime-lubu-{LUBU}{suffix}.webp'
+        if src.exists(): src.replace(OUT / f'walk/slime-lubu{suffix}.webp')
 
 
 

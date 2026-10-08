@@ -7,7 +7,7 @@ PID = 'project-6516bec7-4053-4a7c-a45e-2d739be40b12'
 API = f'https://larch.ink/api/agent/projects/{PID}'
 KEY = open(os.path.expanduser('~/.config/larch/key')).read().strip()
 # 只由產生器負責的設定鍵；其他設定（名稱、介紹、作者在網頁上調的）保留線上的
-OWNED_SETTINGS = ['titleCoverImage', 'projectThumbnail', 'stageFit', 'keepActorsInFrame', 'titleScreenEnabled', 'titleScreen']
+OWNED_SETTINGS = ['titleCoverImage', 'projectThumbnail', 'stageFit', 'keepActorsInFrame', 'titleScreenEnabled', 'titleScreen', 'customInterfaces']
 OWNED_PLUGINS = ['larch-rpg-system', 'prince-hime']   # 產生器整份負責的插件設定（RPG 系統、時鐘 HUD）
 
 

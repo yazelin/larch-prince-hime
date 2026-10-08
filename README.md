@@ -70,6 +70,12 @@
 - 名字存在 `rpgState` 的 `@names`（依角色 id），選單「冒險者」照目前角色 id 查，查不到就顯示預設名「王子姬」。換造型就換了 id，所以時鐘 HUD 把名字抄到 `pet_name`（文字一律用 `{{pet_name}}`），也替每個造型角色 id 在 `@names` 填上同一個名字。
 - 本機測不到真的收藏（要登入帳號），用 `--cross=lubu,guanyu` 假裝收藏裡有。
 
+## 介面
+
+- 介面 Skills 拿官方「小島日和」當底，顏色換成王子姬色系（`scripts/ui.py`，色表照 docs/05：燕麥奶白、蜜桃暖粉、蜂蜜奶黃、晨霧天藍，字用暖可可棕），換對話框、選項、選單、RPG 介面四塊；標題畫面沿用 `build.py` 的 `titleScreen`。版型與動態（果凍晃動的泡泡、彈出的名牌、圓形按鈕、手機造型的暫停選單）照原樣。
+- 官方原始碼不進 repo：`ui.py` 第一次跑時從測試沙盒（作者在網頁套用過小島日和）讀到 `art/ui-ref/`（已 gitignore）。`python3 scripts/ui.py` 會檢查換色後的文字對比（規格書要求 4.5:1）。
+- 造型角色的頭像用單格的 `slime-*-still.webp`：選單的立繪欄會把四列走路圖整張疊著畫。
+
 測試與推送：
 
     python3 tests/check_static.py                 # 靜態檢查：wait 上限、變數讀寫名單、連線、HUD 變數

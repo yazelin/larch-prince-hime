@@ -4,6 +4,8 @@ import json, pathlib, itertools, os, shutil
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 import sys
 from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ui
 # 圖片網址：本機預覽用 /files/assets/（serve.py 從 dist/ 提供）；推上 Larch 用 jsDelivr，釘在已 push 的 commit SHA 上，換圖不會卡快取
 CDN_SHA = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--cdn=')), '')
 A = f'https://cdn.jsdelivr.net/gh/yazelin/larch-prince-hime@{CDN_SHA}/assets/' if CDN_SHA else '/files/assets/'
@@ -13,7 +15,7 @@ ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
-    **{f'slime-{o}': f'walk/slime-{o}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei', 'diaochan')}}.items()}
+    **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei', 'diaochan') for x in ('', '-still')}}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
@@ -321,7 +323,7 @@ def clock_plugin():
 def database():
     def actor(id, sprite, role='party'):
         walk = walk_sprite(sprite)
-        return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
+        return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART.get(sprite + '-still', ART[sprite]),   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
                 'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
@@ -368,6 +370,7 @@ def build():
     s.update(titleCoverImage=ART['cover'], projectThumbnail=ART['cover'], stageFit='auto', keepActorsInFrame=False, titleScreenEnabled=True,
              titleScreen={'bgm': BGM_HOME, 'bgmVolume': 0.35, 'layers': [
                  {'x': 76, 'y': 88, 'id': 'action-start', 'icon': True, 'kind': 'button', 'size': 1.25, 'width': 22, 'action': 'start', 'text': '進入王宮', 'label': '進入王宮'}]})
+    s['customInterfaces'] = ui.skin()   # 介面 Skills：小島日和改成王子姬色系（scripts/ui.py；標題沿用上面的 titleScreen）
     assert {e['target'] for e in E} <= set(by) and {e['source'] for e in E} <= set(by), '有連線指到不存在的卡'
     return p
 
