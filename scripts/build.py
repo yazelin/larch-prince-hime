@@ -11,7 +11,8 @@ BGM_STORY, BGM_HOME = R2 + '1784841727962_sproutlight-path.mp3', R2 + '178484172
 ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
-    'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp', 'slime-lubu': 'walk/slime-lubu.webp'}.items()}
+    'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
+    **{f'slime-{o}': f'walk/slime-{o}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei')}}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
@@ -29,18 +30,19 @@ CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的�
     ('quan', BUCHAN, 'w-quan', '小木弓', '仙泉谷', '一把很小的木弓，弦上還纏著布條。', ''),
     ('xiang', BUCHAN, 'w-xiang', '鐵剪刀', '仙泉谷', '兩片刃，尾端一個鐵環。', ''),
     ('diaochan', BUCHAN, 'handkerchief', '冷梅帕', '仙泉谷', '一方帕子，角上繡著冷梅。', ''),
-    ('liubei', TAOYUAN, 'w-liubei', '雙股劍', '涿郡桃園', '一雌一雄兩把劍。', ''),
-    ('guanyu', TAOYUAN, 'w-guanyu', '青龍偃月刀', '涿郡桃園', '刀身削成一彎新月。', ''),
-    ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', ''),
+    ('liubei', TAOYUAN, 'w-liubei', '雙股劍', '涿郡桃園', '一雌一雄兩把劍。', 'liubei'),
+    ('guanyu', TAOYUAN, 'w-guanyu', '青龍偃月刀', '涿郡桃園', '刀身削成一彎新月。', 'guanyu'),
+    ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', 'zhangfei'),
 ]
 WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義'}
-OUTFITS = {'lubu': ('ph-lubu', '飛將', 'slime-lubu')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
+OUTFITS = {'lubu': ('ph-lubu', '方天畫戟', 'slime-lubu'), 'liubei': ('ph-liubei', '雙股劍', 'slime-liubei'),
+           'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
 for k, *_ in CROSS:
     VARS[f'got_{k}'] = ('boolean', False, f'領過聯動禮物 {k}')
 VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
-VARS['mirror_seen'] = ('boolean', False, '打開過穿衣鏡')
+VARS['mirror_new'] = ('boolean', False, '有新造型還沒去穿衣鏡')
 VARS['pet_name'] = ('string', '', '寵物的名字（時鐘 HUD 從 rpgState 抄出來，換造型也不變）')
-CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_seen', 'pet_name', 'rpgState'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
+CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_new', 'pet_name', 'rpgState'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
 CROSS_VARS = [f'cross_{k}' for k, *_ in CROSS]   # 引擎依玩家收藏設的字串變數，id 照《無雙》加 rpg- 前綴
 
 BASE_DEFAULTS = {k: d for k, (_, d, _) in VARS.items()}   # 正式版的預設值：重新領養一律還原成這些，不受下面測試旗標影響
@@ -233,7 +235,7 @@ def nursery():
     def gift_page(k, work, ref, name, place, line, outfit):
         acts = [say(f'國王的使者送來一個包裹，封蠟上寫著「{place}」。'), say(f'裡面是{name}。{line}'),
                 act('item', itemId=f'cx-{k}', itemName=name, amount=1), setv(f'got_{k}', True), balloon('heart')]
-        if outfit: acts.append(say(f'穿衣鏡那邊多了一套「{OUTFITS[outfit][1]}」造型。'))
+        if outfit: acts += [say(f'穿衣鏡那邊多了一套「{OUTFITS[outfit][1]}」造型。'), setv('mirror_new', True)]
         return {'id': f'gift-{k}', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE,
                 'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False, 'actions': acts}
     gift = ev('gift', 21, 12, solid=True, free={'url': ART['gift'], 'x': 20.6, 'y': 10.9, 'w': 1.3, 'h': 1.3},
@@ -241,13 +243,17 @@ def nursery():
               pages=[gift_page(*c) for c in reversed(CROSS)])   # 後面的分頁優先：照清單順序一件一件給
     # 穿衣鏡：貝殼鏡上緣 (2,4)（牆格），小人只能從右邊 (3,4) 靠近，按左鍵只會轉身。
     wear = lambda okey: [act('hero', value=OUTFITS[okey][0] if okey else 'ph'), setv('outfit', okey)]
-    outfit_opts = [{'id': 'plain', 'label': '平常', 'actions': wear('')}] + [
-        {'id': f'o-{o}', 'label': OUTFITS[o][1], 'actions': wear(o)} for o in OUTFITS] + [{'id': 'keep', 'label': '不換', 'actions': []}]
+    # 選項不能各自帶條件，所以「拿到哪幾件」的每種組合各一個分頁，選單只列拿到的造型（4 件＝15 頁，引擎上限 98）
+    def mirror_page(have):
+        opts = [{'id': 'plain', 'label': '平常', 'actions': wear('')}] + [
+            {'id': f'o-{o}', 'label': OUTFITS[o][1], 'actions': wear(o)} for o in have] + [{'id': 'keep', 'label': '不換', 'actions': []}]
+        return {'id': 'mirror-' + '-'.join(have), 'conditions': [cond(f'got_{o}', True, 'eq' if o in have else 'neq') for o in OUTFITS],
+                'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False,
+                'actions': [setv('mirror_new', False), act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': opts})]}
+    combos = [[o for i, o in enumerate(OUTFITS) if n >> i & 1] for n in range(1, 2 ** len(OUTFITS))]
     mirror = ev('mirror', 2, 4, solid=True, marker={'label': '穿衣鏡', 'kind': 'talk'}, actions=[
-        say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的兵器以後，可以在這裡換造型。'), setv('mirror_seen', True)],
-        pages=[{'id': f'mirror-{o}', 'conditions': [cond(f'got_{o}', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
-                'trigger': 'action', 'once': False, 'actions': [setv('mirror_seen', True),
-                act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': outfit_opts})]} for o in OUTFITS])
+        say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的兵器以後，可以在這裡換造型。')],
+        pages=[mirror_page(h) for h in combos])
     # 換裝跨週目保留：進地圖時照 outfit 換回去（主角換人存在本輪存檔裡，跨週目只留得住變數）
     restores = [ev(f'outfit-{o}', 11 + i, 0, trigger='auto', conditions=[cond('outfit', o)], actions=[act('hero', value=OUTFITS[o][0])])
                 for i, o in enumerate(OUTFITS)]
@@ -269,7 +275,7 @@ def nursery():
     guidance = [{'text': '牠在鬧脾氣，先陪牠玩（玩具箱）', 'eventId': 'toys', 'conditions': [cond('very_sulky', True)]},
                 {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]}] + [
                 {'text': '有遠方送來的禮物', 'eventId': 'gift', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')]} for k, *_ in CROSS] + [
-                {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond(f'got_{o}', True), cond('mirror_seen', True, 'neq')]} for o in OUTFITS] + [
+                {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond('mirror_new', True)]}] + [   # 每套各一條會超過任務提示上限 16 條
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
                 {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS]
     m = {'version': 1, 'name': '皇家育嬰室', 'width': W, 'height': H, 'tileSize': 48,
@@ -301,13 +307,13 @@ def clock_plugin():
 
 
 def database():
-    def actor(id, sprite):
+    def actor(id, sprite, role='party'):
         walk = {'url': ART[sprite], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'}
-        return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': 'party', 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
+        return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
                 'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
-            'actors': [actor('ph', 'slime')] + [actor(aid, spr) for aid, _, spr in OUTFITS.values()]}
+            'actors': [actor('ph', 'slime')] + [actor(aid, spr, 'npc') for aid, _, spr in OUTFITS.values()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
 
 def build():
     p = json.loads((ROOT / 'skeleton/project.json').read_text())

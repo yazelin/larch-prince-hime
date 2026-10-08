@@ -25,8 +25,8 @@ def square(im, pad=0.06):
     c = Image.new('RGBA', (S, S), (0, 0, 0, 0)); c.paste(b, ((S - b.width) // 2, S - p - b.height)); return c
 
 
-def despill(path):
-    subprocess.run([sys.executable, str(CUT), 'despill', str(path), '--key', 'green'], check=True, capture_output=True)
+def despill(path, key='green'):
+    subprocess.run([sys.executable, str(CUT), 'despill', str(path), '--key', key], check=True, capture_output=True)
     fixed = path.with_name(path.stem + '-fixed.png'); fixed.replace(path)
 
 
@@ -76,6 +76,16 @@ def main():
     for name, src in (('slime-daily', 'sprite-test-daily'), ('slime-lubu', 'sprite-test-lubu')):   # 平常與飛將造型的地圖小人
         o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
         resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (128, 128)).save(o); despill(o)
+        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
+    # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備用藍幕
+    for name, key in (('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green')):
+        raw = RAW / f'outfit-{name}.png'
+        if not raw.exists(): print('缺', raw.name); continue
+        cut = RAW / f'outfit-{name}-cut.png'
+        subprocess.run([sys.executable, str(CUT), 'key', str(raw), '-o', str(cut), '--key', key], check=True, capture_output=True)
+        print(name, subprocess.run([sys.executable, str(CUT), 'check', str(cut), '--key', key], capture_output=True, text=True).stdout.strip().splitlines()[-4:])
+        o = OUT / f'walk/slime-{name}.png'
+        resize_pm(square(Image.open(cut)), (128, 128)).save(o); despill(o, key)
         Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
 
 

@@ -4,7 +4,10 @@ import subprocess, sys, pathlib, concurrent.futures as cf
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GEN = pathlib.Path.home() / '.claude/skills/codex-imagegen/codex-imagegen.sh'
 # 定錨的來源都是 repo 裡的 webp，產圖時才轉成 png 放進 art/raw/_ref（codex 吃 png 最穩；art/raw 不進 git）
-REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style-test-1.webp', 'slime': 'assets/concept/sprite-raw-green.webp'}
+TAOYUAN = pathlib.Path.home() / 'larch-taoyuan'   # 聯動造型照《三結義》的兵器對照表與三姊妹定錨（只當參考，不進本 repo）
+REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style-test-1.webp', 'slime': 'assets/concept/sprite-raw-green.webp',
+           'weapons': TAOYUAN / 'buchan/cg_v/sheet_weapons_yuanmen_v2.webp', 'liubei': TAOYUAN / 'cast/anchor_liubei.webp',
+           'guanyu': TAOYUAN / 'cast/anchor_guanyu.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
 
 
@@ -12,7 +15,7 @@ def refs_ready():
     from PIL import Image
     (ROOT / 'art/raw/_ref').mkdir(parents=True, exist_ok=True)
     for k, src in REF_SRC.items():
-        if not (ROOT / REF[k]).exists(): Image.open(ROOT / src).save(ROOT / REF[k])
+        if not (ROOT / REF[k]).exists(): Image.open(ROOT / src).convert('RGB').save(ROOT / REF[k])
 
 SCENE = ('Painted in the exact rendering style and palette of the scene reference image (glossy cute anime storybook, warm afternoon light, '
          'soft low-saturation oat cream, honey, peach, mint and mist blue). Calm and uncluttered, healing mood. '
@@ -20,7 +23,30 @@ SCENE = ('Painted in the exact rendering style and palette of the scene referenc
 GREEN = ('On a perfectly flat solid pure green #00FF00 background. Even flat lighting, crisp clean edges, NO shadow, NO ground, '
          'NO gradient, NO reflection, nothing touches the image edges. No text, no watermark.')
 
+def plate(hexcode, name):
+    return (f'On a perfectly flat solid pure {name} {hexcode} background. Even flat lighting, crisp clean edges, NO shadow, NO ground, '
+            'NO gradient, NO reflection, nothing touches the image edges. No text, no watermark.')
+
+# 聯動造型小人：照 image 1 右邊飛將那隻的畫法（同一隻奶白果凍穿上整套衣服＋兵器），一張一隻
+OUTFIT = ('Image 1 shows our pet slime: LEFT is its everyday look, RIGHT is its crossover costume "Flying General". '
+          'Draw ONE new crossover costume for the SAME slime in exactly the same way as the right one in image 1: same body shape, size, outline, '
+          'glossy cute rendering, star-pupil sparkling eyes, small open happy mouth, rosy blush, small round nub hands, three-quarter view facing the viewer. '
+          'The body is OPAQUE milky pearl white like mochi (not transparent, very little rainbow sheen). No crown. '
+          'The whole slime with its weapon must fit inside the frame with wide margin, square composition, single character only. ')
+
 JOBS = {
+    'outfit-liubei': (['slime', 'weapons', 'liubei'], OUTFIT + 'Costume of Liu Bei from image 3 turned into a cute slime outfit: an ivory white short robe-cape with green trim and '
+                      'small gold cloud embroidery wrapped around the lower body, a light green hair ribbon tied on top of its head, warm brown eyes. '
+                      'Weapon: the twin swords of Liu Bei exactly as in image 2 (third from left, two straight double-edged jian swords with gold guards and '
+                      'dark green grips): both swords drawn and crossed in an X behind the slime\'s back, hilts up above its head, blades pointing down. ' + plate('#0000FF', 'blue')),
+    'outfit-guanyu': (['slime', 'weapons', 'guanyu'], OUTFIT + 'Costume of Guan Yu from image 3 turned into a cute slime outfit: a deep green robe-cape with gold dragon embroidery '
+                      'and a red inner cape lining, a tiny long black braid tail with a red tassel, amber eyes with a slightly proud brave look but still smiling. '
+                      'Weapon: the Green Dragon Crescent Blade exactly as in image 2 (fourth from left: a long pole with one large curved crescent glaive blade on top, '
+                      'gold dragon on the blade, red tassel under the blade), held upright by one nub hand beside the body, blade at the top. ' + plate('#0000FF', 'blue')),
+    'outfit-zhangfei': (['slime', 'weapons', 'zhangfei'], OUTFIT + 'Costume of Zhang Fei from image 3 turned into a cute slime outfit: a small black lamellar armor vest with gold studs '
+                        'and a gold lion-face buckle, a red sash, a red hair ribbon tying a little dark brown ponytail tuft on top, amber eyes, a cheeky grin showing one tiny fang. '
+                        'Weapon: the Serpent Spear exactly as in image 2 (rightmost: a long pole with ONE wavy snake-shaped blade only at the top, a red tassel under it, '
+                        'red lower shaft, and a plain blunt round metal cap at the bottom end, NOT a second blade), held upright by one nub hand beside the body. ' + plate('#00FF00', 'green')),
     'bg-capital': (['scene'], 'A floating cloud kingdom seen from a distance in the morning: white castle towers and small houses on floating islands among soft clouds, '
                    'and in the very center a huge gentle tree of life with pale golden leaves; hanging from one branch is a single small translucent rainbow jelly egg '
                    'with a tiny golden crown on top. ' + SCENE),

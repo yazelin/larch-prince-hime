@@ -33,6 +33,7 @@ def check(flags):
                 if 'loop' in a: conds += a['loop'].get('until', [])
             bad += [f'{e["id"]}：條件用到沒宣告的變數 {c["variable"]}' for c in conds if c['kind'] == 'variable' and c['variable'] not in declared]
         bad += [f'任務提示用到沒宣告的變數 {c["variable"]}' for g in m.get('guidance', []) for c in g['conditions'] if c['variable'] not in declared]
+        if len(m.get("guidance", [])) > 16: bad.append(f'任務提示 {len(m["guidance"])} 條，超過 16 條（播放器會整個壞掉）')
         W = m['width']; wall = {(i % W, i // W) for i, t in enumerate(m['layers'][0]['tiles']) if t}
         for e in m['events']:
             xy = (e['x'], e['y'])
