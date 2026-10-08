@@ -3,6 +3,7 @@
 import json, pathlib, itertools, os, shutil
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 import sys
+from PIL import Image
 # 圖片網址：本機預覽用 /files/assets/（serve.py 從 dist/ 提供）；推上 Larch 用 jsDelivr，釘在已 push 的 commit SHA 上，換圖不會卡快取
 CDN_SHA = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--cdn=')), '')
 A = f'https://cdn.jsdelivr.net/gh/yazelin/larch-prince-hime@{CDN_SHA}/assets/' if CDN_SHA else '/files/assets/'
@@ -308,7 +309,8 @@ def clock_plugin():
 
 def database():
     def actor(id, sprite, role='party'):
-        walk = {'url': ART[sprite], 'width': 128, 'height': 128, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3, 'faces': 'right'}
+        w, h = Image.open(ROOT / 'assets/art' / ART[sprite].split('art/', 1)[1]).size   # 造型小人畫布比 128 大（要裝兵器），寬高照圖檔
+        walk = {'url': ART[sprite], 'width': w, 'height': h, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3 * w / 128, 'faces': 'right'}   # 引擎會把大畫布縮回同一個框，scale 照畫布比例放大，身體才跟平常那隻一樣大
         return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
                 'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）

@@ -25,6 +25,29 @@ def square(im, pad=0.06):
     c = Image.new('RGBA', (S, S), (0, 0, 0, 0)); c.paste(b, ((S - b.width) // 2, S - p - b.height)); return c
 
 
+LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
+
+
+# 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是 art/raw/outfit-*-cut.png（1254px）。
+# ponytail: 手量的校正表；自動量會被兵器桿、髮繩、披風干擾（試過兩種都差到 3 成）。重產哪張就重量哪張
+BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (700, 614), 'guanyu': (514, 582), 'zhangfei': (572, 570)}
+BODY = 88   # 平常那隻 128px 小人身體的寬度，造型都縮到一樣寬
+
+
+def extent(im, cx):
+    """以身體中心為準，左右各要多寬（取大的一邊×2）與整體高度。"""
+    ys, xs = np.where(np.asarray(im)[..., 3] > 10)
+    return 2 * max(cx - xs.min(), xs.max() - cx), ys.max() - ys.min() + 1
+
+
+def place(im, k, cx, S=128, foot=123):
+    """縮 k 倍後身體中心對齊畫布中線、底部對齊 foot。"""
+    ys, xs = np.where(np.asarray(im)[..., 3] > 10)
+    b = im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+    r = resize_pm(b, (max(1, round(b.width * k)), max(1, round(b.height * k))))
+    c = Image.new('RGBA', (S, S), (0, 0, 0, 0)); c.alpha_composite(r, (round(S / 2 - (cx - xs.min()) * k), foot - r.height)); return c
+
+
 def despill(path, key='green'):
     subprocess.run([sys.executable, str(CUT), 'despill', str(path), '--key', key], check=True, capture_output=True)
     fixed = path.with_name(path.stem + '-fixed.png'); fixed.replace(path)
@@ -73,20 +96,29 @@ def main():
             w = o.with_suffix('.webp'); Image.open(o).save(w, quality=90); o.unlink(); print('ok', w.name, part.size)   # 帶透明的 webp，比 png 小很多
     cut_sheet('sheet-props', [('props/basket.webp', 256), ('props/poop.webp', 128), ('props/coin.webp', 128)])
     cut_sheet('sheet-gift', [('props/gift.webp', 256)])
-    for name, src in (('slime-daily', 'sprite-test-daily'), ('slime-lubu', 'sprite-test-lubu')):   # 平常與飛將造型的地圖小人
+    for name, src in (('slime-daily', 'sprite-test-daily'),):   # 平常的地圖小人（呂布造型改走下面的聯動造型）
         o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
         resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (128, 128)).save(o); despill(o)
         Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
-    # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備用藍幕
-    for name, key in (('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green')):
+    # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
+    cuts = {}
+    for name, key in (('lubu-baihua', 'green'), ('lubu-heijin', 'green'), ('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green')):
         raw = RAW / f'outfit-{name}.png'
         if not raw.exists(): print('缺', raw.name); continue
         cut = RAW / f'outfit-{name}-cut.png'
         subprocess.run([sys.executable, str(CUT), 'key', str(raw), '-o', str(cut), '--key', key], check=True, capture_output=True)
         print(name, subprocess.run([sys.executable, str(CUT), 'check', str(cut), '--key', key], capture_output=True, text=True).stdout.strip().splitlines()[-4:])
+        cuts[name] = (Image.open(cut), key)
+    # 兵器長短不一，整張塞進 128 會讓身體忽大忽小（方天畫戟那隻身體只剩 44px）。改成身體寬度跟平常那隻一樣，
+    # 畫布放大到裝得下最長的兵器；身體置中，所以小人站的位置跟平常那隻一致（build.py 照圖檔尺寸宣告 sprite 寬高）
+    body = {n: BODY_PX[n] for n in cuts}
+    need = max(max(extent(im, body[n][1])) * BODY / body[n][0] for n, (im, _) in cuts.items())
+    S = int(-(-(need + 8) // 16) * 16)
+    for name, (im, key) in cuts.items():
         o = OUT / f'walk/slime-{name}.png'
-        resize_pm(square(Image.open(cut)), (128, 128)).save(o); despill(o, key)
-        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
+        place(im, BODY / body[name][0], body[name][1], S, S - 5).save(o); despill(o, key)
+        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)
+    (OUT / f'walk/slime-lubu-{LUBU}.webp').replace(OUT / 'walk/slime-lubu.webp') if (OUT / f'walk/slime-lubu-{LUBU}.webp').exists() else None
 
 
 
