@@ -308,10 +308,13 @@ def clock_plugin():
     return {'enabled': True, 'playback': {'version': '0.1.0', 'permissions': ['player:ui', 'variables:read', 'variables:write'], 'defaults': {}, 'huds': [hud]}}
 
 
+FACES = {'slime-lubu': 'left', 'slime-liubei': 'left', 'slime-guanyu': 'left'}   # 圖上朝左的造型（作者實際走過看的）；引擎依這個決定往哪走時翻圖
+
+
 def database():
     def actor(id, sprite, role='party'):
         w, h = Image.open(ROOT / 'assets/art' / ART[sprite].split('art/', 1)[1]).size   # 造型小人畫布比 128 大（要裝兵器），寬高照圖檔
-        walk = {'url': ART[sprite], 'width': w, 'height': h, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3 * w / 128, 'faces': 'right'}   # 引擎會把大畫布縮回同一個框，scale 照畫布比例放大，身體才跟平常那隻一樣大
+        walk = {'url': ART[sprite], 'width': w, 'height': h, 'frames': 1, 'rows': 1, 'offsetX': 0, 'offsetY': 0, 'idleFrame': 0, 'scale': 3 * w / 128, 'faces': FACES.get(sprite, 'right')}   # 引擎會把大畫布縮回同一個框，scale 照畫布比例放大，身體才跟平常那隻一樣大
         return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART[sprite],   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
                 'kit': 'none', 'rig': 'slime', 'joinVariable': ''}
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
