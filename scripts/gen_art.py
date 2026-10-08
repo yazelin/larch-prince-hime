@@ -13,6 +13,7 @@ REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style
            'diaochan': TAOYUAN / 'cast/lubu/定錨_貂蟬_全圖.webp', 'handkerchief': TAOYUAN / 'cast/lubu/定錨_道具_冷梅帕.webp',
            'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
+REF.update({f'form-{n}': f'art/raw/form-{n}.png' for n in ('prince', 'hime')})   # 成年禮 CG 用分化後的樣子當定錨
 REF.update({f'raw-{n}': f'art/raw/outfit-{n}.png' for n in ('lubu-baihua', 'liubei', 'guanyu', 'zhangfei', 'diaochan')})   # 徽章改圖用作者認可過的原圖
 
 
@@ -124,6 +125,18 @@ JOBS = {
     'form-hime': (['slime'], FORM + 'a little PRINCESS: instead of the crown a small delicate gold tiara with a pink heart gem, a pink satin ribbon bow on one side of the head, '
                     'a soft frilly pastel pink lace skirt-frill around the bottom of the body, warm rose-pink eyes. Cute and elegant. Single character only, whole slime inside the frame with wide margin, square composition. '
                     + ROUND + plate('#00FF00', 'green')),   # 粉色緞帶跟洋紅幕撞色，用綠幕
+    # 競技場成年禮（2026-10-09）：背景一張、表演 CG 依分化各一張
+    'bg-arena': (['scene'], 'A small round royal arena in the cloud kingdom, cute and festive, not violent: pale stone ring of tiered seats decorated with pastel banners and flower garlands, '
+                 'a fluffy white cloud-shaped rug laid in the center of the sandy floor, a small honey-colored cushion seat for the king at the front row, blue sky with soft clouds, '
+                 'confetti and sparkles in the air, warm morning light. The seats are filled with many tiny round pastel slimes as the audience, all small and far away. ' + SCENE),
+    'cg-adult-prince': (['form-prince', 'scene'], 'The little prince slime from image 1 (keep it exactly: opaque milky pearl-white round body, gold crown with red gem, short royal blue cape with gold clasp, '
+                 'deep blue sparkling star-pupil eyes) stands proudly on a fluffy white cloud-shaped rug in the center of a small festive royal arena, holding up a soft toy wooden sword '
+                 'in one nub hand; a straw training dummy beside it is tipped over. Tiers of tiny pastel slime spectators cheering in the background, confetti, blue sky. '
+                 'Scene style from image 2. WIDE LANDSCAPE 16:9. No humans, no text, no watermark.'),
+    'cg-adult-hime': (['form-hime', 'scene'], 'The little princess slime from image 1 (keep it exactly: opaque milky pearl-white round body, small gold tiara with a pink heart gem, pink satin ribbon bow, '
+                 'pink lace skirt-frill, rose-pink sparkling star-pupil eyes) sits neatly on a fluffy white cloud-shaped rug in the center of a small festive royal arena, '
+                 'pouring tea from a tiny porcelain teapot into a little teacup, a tray of star-shaped cookies beside it, the tea slightly overflowing the cup rim. '
+                 'Tiers of tiny pastel slime spectators cheering in the background, confetti, blue sky. Scene style from image 2. WIDE LANDSCAPE 16:9. No humans, no text, no watermark.'),
 }
 
 

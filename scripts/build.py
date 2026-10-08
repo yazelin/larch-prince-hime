@@ -13,6 +13,7 @@ R2 = 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-982
 BGM_STORY, BGM_HOME = R2 + '1784841727962_sproutlight-path.mp3', R2 + '1784841721002_dewdrops-heart.mp3'
 ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
+    'arena': 'bg/arena.webp', 'adult-prince': 'cg/adult-prince.webp', 'adult-hime': 'cg/adult-hime.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
     **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'lubu-heijin', 'liubei', 'guanyu', 'zhangfei', 'diaochan') for x in ('', '-still')},
@@ -55,9 +56,12 @@ VARS['last_play'] = ('string', '', '最後一次玩的遊戲（prince／hime；�
 VARS['form'] = ('string', '', '分化後的樣子（空字串＝還沒分化、prince、hime）')
 VARS['grow_hint'] = ('boolean', False, '分化前的預告說過了')
 VARS['base_ok'] = ('boolean', True, '平常的樣子已經換成分化後的那隻（換回平常時設 false，條件事件接手）')
-GROW_AT, GROW_HINT, LEAN_SHOW = 300, 260, 2   # ponytail: 只看親密度（陪玩 +8、餵食 +3～5，約玩 30 次）；要照天數算再加時鐘 HUD 的天數
+GROW_AT, GROW_HINT, LEAN_SHOW = 300, 260, 2
+ADULT_AT = 400   # 分化後親密度再到這裡，國王的使者送來成年禮的邀請（約再陪玩 12 次）
+VARS['invited'] = ('boolean', False, '收到成年禮的邀請')
+VARS['adult'] = ('boolean', False, '辦過競技場成年禮')   # ponytail: 只看親密度（陪玩 +8、餵食 +3～5，約玩 30 次）；要照天數算再加時鐘 HUD 的天數
 FORMS = {'prince': ('ph-prince', '小王子', 'slime-prince'), 'hime': ('ph-hime', '小公主', 'slime-hime')}   # 分化鍵 → (資料庫角色 id, 稱呼, 小人圖)
-CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_new', 'pet_name', 'rpgState', 'lean', 'last_play', 'form', 'grow_hint'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
+CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_new', 'pet_name', 'rpgState', 'lean', 'last_play', 'form', 'grow_hint', 'invited', 'adult'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
 CROSS_VARS = [f'cross_{k}' for k, *_ in CROSS]   # 引擎依玩家收藏設的字串變數，id 照《無雙》加 rpg- 前綴
 
 BASE_DEFAULTS = {k: d for k, (_, d, _) in VARS.items()}   # 正式版的預設值：重新領養一律還原成這些，不受下面測試旗標影響
@@ -135,6 +139,25 @@ STORY = [
         '啵。',
         '蛋殼裂成兩半，一團白白軟軟的東西彈了出來，頭上歪歪地戴著那頂小金冠。',
         '牠看著你，眨了兩下眼睛。'], False),
+    # 競技場成年禮（分化後，從育嬰室門口出發）：表演依分化分兩張，再回到同一張
+    ('a-arena', '競技場', 'arena', [
+        '王都的競技場坐滿了來看熱鬧的史萊姆。三位大臣坐在最前排，這次沒有在吵架。',
+        '你抱著{{pet_name}}走進場中央。地上鋪了一塊雲朵形狀的地毯，跟育嬰室那塊一模一樣。',
+        (KING, '本王一百年前的成年禮，也是在這裡辦的。'),
+        (KING, '那時候本王表演的是……算了，不重要。換牠。')], True),
+    ('a-prince', '比劍', 'adult-prince', [
+        '{{pet_name}}從地毯上彈起來，舉著那把軟軟的木劍。',
+        '牠對著場邊的稻草人揮了三下。第三下太用力，稻草人倒了，牠自己也滾了兩圈。',
+        '全場安靜了一下，然後大家都在拍手。'], False),
+    ('a-hime', '茶會', 'adult-hime', [
+        '{{pet_name}}端端正正地坐在地毯中央，面前擺著一套小茶杯和一盤星星餅乾。',
+        '牠替國王倒了一杯茶，倒得有點滿，茶從杯緣溢出來一點點。',
+        '國王一口喝完。全場都在拍手。'], False),
+    ('a-crown', '成年禮', 'arena', [
+        (KING, '很好。從今天起，{{pet_name}}是王都正式的王族了。'),
+        (KING, '至於你。'),
+        (KING, '導師的位子，繼續坐著吧。本王不管。'),
+        '回到育嬰室的路上，{{pet_name}}在你懷裡睡著了。'], True),
 ]
 # 選項卡：(id, 標題, 背景, 問句, [(選項, 去哪張卡)])
 CHOICES = [
@@ -144,7 +167,8 @@ CHOICES = [
 ]
 FLOW = [('route', 'p-capital'), ('p-capital', 'p-courtyard'), ('p-courtyard', 'c-egg'), ('p-ignore', 'p-throne'), ('p-pickup', 'p-throne'),
         ('p-throne', 'c-king'), ('p-reluctant', 'p-rules'), ('p-willing', 'p-rules'), ('p-rules', 'p-nursery'),
-        ('p-nursery', 'c-poke'), ('p-poke', 'p-hatch'), ('p-wait', 'p-hatch'), ('p-hatch', 'm-nursery')]
+        ('p-nursery', 'c-poke'), ('p-poke', 'p-hatch'), ('p-wait', 'p-hatch'), ('p-hatch', 'm-nursery'),
+        ('a-prince', 'a-crown'), ('a-hime', 'a-crown'), ('a-crown', 'a-done'), ('a-done', 'm-nursery')]
 HOME_BGM_FROM = 'p-nursery'   # 從育嬰室開始換成培育室的音樂
 
 # ---------- 卡片 ----------
@@ -240,7 +264,9 @@ def nursery():
                      ('lean-prince', [cond('form', ''), cond('lean', LEAN_SHOW, 'gte')], '最近的{{pet_name}}，比較像一位小王子。'),
                      ('lean-hime', [cond('form', ''), cond('lean', -LEAN_SHOW, 'lte')], '最近的{{pet_name}}，比較像一位小公主。'),
                      ('is-prince', [cond('form', 'prince')], '{{pet_name}}是王都的小王子。'),
-                     ('is-hime', [cond('form', 'hime')], '{{pet_name}}是王都的小公主。'))])
+                     ('is-hime', [cond('form', 'hime')], '{{pet_name}}是王都的小公主。'),
+                     ('adult-prince', [cond('form', 'prince'), cond('adult', True)], '{{pet_name}}辦過成年禮了，是王都正式的小王子。'),
+                     ('adult-hime', [cond('form', 'hime'), cond('adult', True)], '{{pet_name}}辦過成年禮了，是王都正式的小公主。'))])
     loop = lambda: act('loop', loop={})
     # 時鐘：開著遊戲時每 30 秒餓一點；上下限另外兩個事件夾住
     clock = ev('clock', 0, 0, trigger='parallel',   # 不掛 intro_done：背景事件只在進地圖時看條件，開場中途才成立的話要離開再回來才會跑
@@ -313,6 +339,16 @@ def nursery():
              grow('grow-h1', 3, 'hime', [cond('lean', -1, 'lte')]), grow('grow-h2', 4, 'hime', [cond('lean', 0), cond('last_play', 'hime')])]
     hint = ev('grow-hint', 5, 1, trigger='condition', conditions=[cond('form', ''), cond('grow_hint', True, 'neq'), cond('affection', GROW_HINT, 'gte')], actions=[
         say('……啾。身體好像熱熱的。', speaker='player'), say('{{pet_name}}最近很常發呆，好像快要長大了。'), setv('grow_hint', True)])
+    # 成年禮：分化後親密度到 ADULT_AT，使者送邀請；從門口出發（門口在地圖最下面正中的地墊上，寵物站在上面一格往下按）
+    invite = ev('invite', 10, 1, trigger='condition', conditions=[cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('invited', True, 'neq'), cond('affection', ADULT_AT, 'gte')], actions=[
+        balloon('exclamation'), say('門口傳來敲門聲。國王的使者送來一封信，封蠟上是那頂小金冠。'),
+        say('「{{pet_name}}的成年禮，在競技場舉行。準備好了，就從育嬰室門口出發。」'), setv('invited', True)])
+    door = ev('door', 11, 17, solid=True, marker={'label': '門口', 'kind': 'talk'}, actions=[say('門外是王宮的長廊。國王說過，沒事不要帶牠亂跑。')], pages=[
+        {'id': 'go', 'conditions': [cond('invited', True), cond('adult', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
+         'trigger': 'action', 'once': False, 'actions': [act('choice', text='要出發去競技場嗎？', speaker='narrator', choice={'cancel': 'wait', 'options': [
+             {'id': 'go', 'label': '出發', 'actions': [act('jump', cardId='a-arena')]}, {'id': 'wait', 'label': '再等一下', 'actions': []}]})]},
+        {'id': 'done', 'conditions': [cond('adult', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
+         'trigger': 'action', 'once': False, 'actions': [say('門外是王宮的長廊。{{pet_name}}的成年禮已經辦完了，今天就待在育嬰室吧。')]}])
     # 平常的樣子：進地圖時（auto）與從穿衣鏡換回平常時（condition，看 base_ok）都換成分化後那隻
     bases = [ev(f'base-{f}', 6 + i, 1, trigger='auto', conditions=[cond('outfit', ''), cond('form', f)], actions=[act('hero', value=aid), setv('base_ok', True)])
              for i, (f, (aid, _, _)) in enumerate(FORMS.items())] + [
@@ -336,14 +372,15 @@ def nursery():
     guidance = [{'text': '牠在鬧脾氣，先陪牠玩（玩具箱）', 'eventId': 'toys', 'conditions': [cond('very_sulky', True)]},
                 {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]}] + [
                 {'text': '有遠方送來的禮物', 'eventId': 'gift', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')]} for k, *_ in CROSS] + [
-                {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond('mirror_new', True)]}] + [   # 每套各一條會超過任務提示上限 16 條
+                {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond('mirror_new', True)]},
+                {'text': '成年禮：從門口出發去競技場', 'eventId': 'door', 'conditions': [cond('invited', True), cond('adult', True, 'neq')]}] + [   # 每套各一條會超過任務提示上限 16 條
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
                 {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS]
     m = {'version': 1, 'name': '皇家育嬰室', 'width': W, 'height': H, 'tileSize': 48,
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
                      'tiles': ['kn-dungeon:0' if (i % W, i // W) in walls() else None for i in range(W * H)]}],
-         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases + [invite, door], 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
@@ -367,7 +404,7 @@ def layered(m):
     m['layers'][0]['tiles'] = ['kn-dungeon:0' if (i % Wn, i // Wn) in wl else None for i in range(Wn * Hn)]
     at = {'hero': pt['hero_start'], 'intro': (pt['hero_start'][0], pt['hero_start'][1] + 6), **{k: pt[k] for k in POOP_CELLS},
           # 互動事件掛在家具的佔地格上，寵物從站點那一格靠近（站點在家具右邊或左邊一格）
-          'mirror': (4, 12), 'journal': (7, 19), 'toys': (7, 27), 'basket': (34, 12), 'gift': (41, 26)}
+          'mirror': (4, 12), 'journal': (7, 19), 'toys': (7, 27), 'basket': (34, 12), 'gift': (41, 26), 'door': (24, 35)}
     for e in m['events']:
         if e['id'] in at: e['x'], e['y'] = at[e['id']]
         e.pop('free', None) if e['id'] in ('basket', 'journal', 'gift') else None   # 點心籃是家具；日誌、禮物箱畫進糖果小桌、沙發（分開放會排在家具後面被蓋掉）
@@ -412,11 +449,16 @@ def build():
     N.insert(0, {'id': 'route', 'type': 'story', 'position': {'x': -400, 'y': 0}, 'data': {'type': 'setVariable', 'title': '開機分流', 'text': '', 'start': True,
                  'variableOps': [{'id': 'route-0', 'variable': 'booted', 'kind': 'set', 'value': 'true'}]}})
     E.append({**edge('route', 'm-nursery'), 'data': {'condition': {'kind': 'variable', 'variable': 'intro_done', 'op': 'eq', 'value': 'true'}}})
+    N.append({'id': 'a-done', 'type': 'story', 'position': pos(), 'data': {'type': 'setVariable', 'title': '成年禮辦完', 'text': '',
+              'variableOps': [{'id': 'a-done-0', 'variable': 'adult', 'kind': 'set', 'value': 'true'}]}})
+    E.append({**edge('a-arena', 'a-prince'), 'data': {'condition': {'kind': 'variable', 'variable': 'form', 'op': 'eq', 'value': 'prince'}}})   # 有條件的線先判
+    E.append(edge('a-arena', 'a-hime'))
     E += [edge(a, b2) for a, b2 in FLOW]
     by = {n['id']: n for n in N}
     home = False
     for n in N:   # 依劇情順序掛音樂：育嬰室之前用 sproutlight，之後用 dewdrops
         if n['id'] == HOME_BGM_FROM: home = True
+        if n['id'] == 'a-arena': n['data'].update(bgm=BGM_STORY, bgmVolume=0.45, bgmLoop=True); continue   # 成年禮用序章的音樂，回育嬰室由地圖卡換回
         if n['data']['type'] != 'plugin' and n['id'] in ('p-capital', HOME_BGM_FROM):
             n['data'].update(bgm=BGM_HOME if home else BGM_STORY, bgmVolume=0.45, bgmLoop=True)
     p['nodes'], p['edges'] = N, E

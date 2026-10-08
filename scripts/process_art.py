@@ -7,7 +7,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW, OUT = ROOT / 'art/raw', ROOT / 'assets/art'
 CUT = pathlib.Path.home() / '.claude/skills/cutout/cutout.py'
 WIDE = {'bg-capital': 'bg/capital.webp', 'bg-courtyard': 'bg/courtyard.webp', 'bg-throne': 'bg/throne.webp',
-        'cg-egg-feet': 'cg/egg-feet.webp', 'cg-hatch': 'cg/hatch.webp', 'cg-egg-rug': 'cg/egg-rug.webp'}
+        'cg-egg-feet': 'cg/egg-feet.webp', 'cg-hatch': 'cg/hatch.webp', 'cg-egg-rug': 'cg/egg-rug.webp',
+        'bg-arena': 'bg/arena.webp', 'cg-adult-prince': 'cg/adult-prince.webp', 'cg-adult-hime': 'cg/adult-hime.webp'}
 
 
 def resize_pm(im, size):
