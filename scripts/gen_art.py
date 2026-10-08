@@ -10,6 +10,7 @@ REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style
            'guanyu': TAOYUAN / 'cast/anchor_guanyu.webp', 'liubei_armor': TAOYUAN / 'cast/v_劉備-戰甲_user_norm.webp',
            'guanyu_armor': TAOYUAN / 'cast/v_關羽-戰甲_user_norm.webp', 'zhangfei_armor': TAOYUAN / 'cast/v_張飛-戰甲_user_norm.webp',
            'liubei_pose': pathlib.Path.home() / 'xianquan-musou/assets/boss_posters/sanying.webp',
+           'diaochan': TAOYUAN / 'cast/lubu/定錨_貂蟬_全圖.webp', 'handkerchief': TAOYUAN / 'cast/lubu/定錨_道具_冷梅帕.webp',
            'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
 
@@ -68,6 +69,11 @@ JOBS = {
                         'a short black lamellar armor skirt around the lower body, a red hair ribbon tying a high dark brown ponytail on top, amber eyes, a cheeky grin showing one tiny fang. '
                         'Weapon: the Serpent Spear exactly as in image 2 (rightmost: a long pole with ONE wavy snake-shaped blade only at the top, a red tassel under it, '
                         'red lower shaft, and a plain blunt round metal cap at the bottom end, NOT a second blade), held upright by one nub hand beside the body. ' + ROUND + plate('#00FF00', 'green')),
+    'outfit-diaochan': (['slime', 'diaochan', 'handkerchief'], OUTFIT + 'Costume of Diaochan from image 2 (her elegant lavender and white robes) turned into a cute slime outfit: '
+                        'a soft white layered robe-skirt with pale lavender sash and flowing translucent lavender ribbons around the lower body, '
+                        'a small dark brown hair bun on top with a delicate silver hairpin and tiny dangling ornament, dark brown eyes, gentle shy smile. '
+                        'No weapon. Instead one nub hand holds up the handkerchief from image 3 beside the body: a small square of white silk with red plum blossoms '
+                        'embroidered in one corner and a red tassel with a white jade bead hanging from that corner. ' + ROUND + plate('#00FF00', 'green')),
     'bg-capital': (['scene'], 'A floating cloud kingdom seen from a distance in the morning: white castle towers and small houses on floating islands among soft clouds, '
                    'and in the very center a huge gentle tree of life with pale golden leaves; hanging from one branch is a single small translucent rainbow jelly egg '
                    'with a tiny golden crown on top. ' + SCENE),

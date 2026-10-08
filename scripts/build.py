@@ -13,7 +13,7 @@ ART = {k: A + 'art/' + v for k, v in {
     'capital': 'bg/capital.webp', 'courtyard': 'bg/courtyard.webp', 'egg-feet': 'cg/egg-feet.webp', 'throne': 'bg/throne.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
-    **{f'slime-{o}': f'walk/slime-{o}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei')}}.items()}
+    **{f'slime-{o}': f'walk/slime-{o}.webp' for o in ('lubu', 'liubei', 'guanyu', 'zhangfei', 'diaochan')}}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
@@ -30,14 +30,15 @@ CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的�
     ('weixu', BUCHAN, 'w-weixu', '環首刀', '仙泉谷', '刀柄末端有一個鐵環。', ''),
     ('quan', BUCHAN, 'w-quan', '小木弓', '仙泉谷', '一把很小的木弓，弦上還纏著布條。', ''),
     ('xiang', BUCHAN, 'w-xiang', '鐵剪刀', '仙泉谷', '兩片刃，尾端一個鐵環。', ''),
-    ('diaochan', BUCHAN, 'handkerchief', '冷梅帕', '仙泉谷', '一方帕子，角上繡著冷梅。', ''),
+    ('diaochan', BUCHAN, 'handkerchief', '冷梅帕', '仙泉谷', '一方帕子，角上繡著冷梅。', 'diaochan'),
     ('liubei', TAOYUAN, 'w-liubei', '雙股劍', '涿郡桃園', '一雌一雄兩把劍。', 'liubei'),
     ('guanyu', TAOYUAN, 'w-guanyu', '青龍偃月刀', '涿郡桃園', '刀身削成一彎新月。', 'guanyu'),
     ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', 'zhangfei'),
 ]
 WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義'}
 OUTFITS = {'lubu': ('ph-lubu', '方天畫戟', 'slime-lubu'), 'liubei': ('ph-liubei', '雙股劍', 'slime-liubei'),
-           'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
+           'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei'),
+           'diaochan': ('ph-diaochan', '冷梅帕', 'slime-diaochan')}   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖)
 for k, *_ in CROSS:
     VARS[f'got_{k}'] = ('boolean', False, f'領過聯動禮物 {k}')
 VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
