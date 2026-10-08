@@ -1,7 +1,7 @@
 """art/raw → assets/art：背景放大成 1920×1080 webp；國王與日誌綠幕去背後切開；小人縮成 128px。"""
 import pathlib, subprocess, sys
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy import ndimage
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW, OUT = ROOT / 'art/raw', ROOT / 'assets/art'
@@ -28,9 +28,12 @@ def square(im, pad=0.06):
 LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
 
 
-# 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是 art/raw/outfit-*-cut.png（1254px）。
+# 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是去背後的 badge-*-cut.png（黑金呂布是 outfit-*-cut.png，1254px）。
 # ponytail: 手量的校正表；自動量會被兵器桿、髮繩、披風干擾（試過兩種都差到 3 成）。重產哪張就重量哪張
-BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640, 588), 'guanyu': (514, 582), 'zhangfei': (572, 570), 'diaochan': (600, 615)}
+BODY_PX = {'lubu-baihua': (530, 571), 'lubu-heijin': (540, 520), 'liubei': (633, 624), 'guanyu': (580, 602), 'zhangfei': (549, 586), 'diaochan': (552, 555)}
+# 徽章外圈（圓心 x、y、半徑），量的是 badge-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
+BADGE = {'lubu-baihua': (551, 998, 107), 'liubei': (586, 923, 110), 'guanyu': (537, 977, 93), 'zhangfei': (639, 952, 95), 'diaochan': (689, 809, 109)}
+ART_LEFT = {'lubu-baihua', 'lubu-heijin', 'liubei', 'guanyu'}   # 圖上朝左的造型（作者實際走過看的），其餘朝右
 BODY = 88   # 平常那隻 128px 小人身體的寬度，造型都縮到一樣寬
 
 
@@ -38,6 +41,17 @@ def extent(im, cx):
     """以身體中心為準，左右各要多寬（取大的一邊×2）與整體高度。"""
     ys, xs = np.where(np.asarray(im)[..., 3] > 10)
     return 2 * max(cx - xs.min(), xs.max() - cx), ys.max() - ys.min() + 1
+
+
+def mirror(im, badge):
+    """左右翻面，但徽章那一圈貼回沒翻過的原樣（徽章是圓的，翻不翻外形都一樣，只有字會反）。"""
+    f = im.transpose(Image.FLIP_LEFT_RIGHT)
+    if badge:
+        x, y, r = badge; r += 4
+        disc = im.crop((x - r, y - r, x + r, y + r)); mask = Image.new('L', disc.size, 0)
+        ImageDraw.Draw(mask).ellipse((0, 0, 2 * r - 1, 2 * r - 1), fill=255)
+        f.paste(disc, (im.width - 1 - x - r, y - r), mask)
+    return f
 
 
 def place(im, k, cx, S=128, foot=123):
@@ -103,9 +117,10 @@ def main():
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
     for name, key in (('lubu-baihua', 'green'), ('lubu-heijin', 'green'), ('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green'), ('diaochan', 'green')):
-        raw = RAW / f'outfit-{name}.png'
+        raw = RAW / f'badge-{name}.png'   # 加了姓氏徽章的版本（沒有就用原圖，例如黑金呂布）
+        if not raw.exists(): raw = RAW / f'outfit-{name}.png'
         if not raw.exists(): print('缺', raw.name); continue
-        cut = RAW / f'outfit-{name}-cut.png'
+        cut = RAW / f'{raw.stem}-cut.png'
         subprocess.run([sys.executable, str(CUT), 'key', str(raw), '-o', str(cut), '--key', key], check=True, capture_output=True)
         print(name, subprocess.run([sys.executable, str(CUT), 'check', str(cut), '--key', key], capture_output=True, text=True).stdout.strip().splitlines()[-4:])
         cuts[name] = (Image.open(cut), key)
@@ -116,7 +131,11 @@ def main():
     S = int(-(-(need + 8) // 16) * 16)
     for name, (im, key) in cuts.items():
         o = OUT / f'walk/slime-{name}.png'
-        place(im, BODY / body[name][0], body[name][1], S, S - 5).save(o); despill(o, key)
+        k, cx = BODY / body[name][0], body[name][1]
+        own = place(im, k, cx, S, S - 5); other = place(mirror(im, BADGE.get(name)), k, im.width - cx, S, S - 5)
+        left, right = (own, other) if name in ART_LEFT else (other, own)
+        sheet = Image.new('RGBA', (S, 4 * S)); [sheet.paste(f, (0, i * S)) for i, f in enumerate((own, left, right, own))]   # 列序＝下、左、右、上
+        sheet.save(o); despill(o, key)
         Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name, 'body', BODY, 'canvas', S)
     (OUT / f'walk/slime-lubu-{LUBU}.webp').replace(OUT / 'walk/slime-lubu.webp') if (OUT / f'walk/slime-lubu-{LUBU}.webp').exists() else None
 

@@ -13,6 +13,7 @@ REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style
            'diaochan': TAOYUAN / 'cast/lubu/定錨_貂蟬_全圖.webp', 'handkerchief': TAOYUAN / 'cast/lubu/定錨_道具_冷梅帕.webp',
            'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
+REF.update({f'raw-{n}': f'art/raw/outfit-{n}.png' for n in ('lubu-baihua', 'liubei', 'guanyu', 'zhangfei', 'diaochan')})   # 徽章改圖用作者認可過的原圖
 
 
 def refs_ready():
@@ -74,6 +75,14 @@ JOBS = {
                         'a small dark brown hair bun on top with a delicate silver hairpin and tiny dangling ornament, dark brown eyes, gentle shy smile. '
                         'No weapon. Instead one nub hand holds up the handkerchief from image 3 beside the body: a small square of white silk with red plum blossoms '
                         'embroidered in one corner and a red tassel with a white jade bead hanging from that corner. ' + ROUND + plate('#00FF00', 'green')),
+    # 姓氏徽章：縮到地圖大小只認得出「奶白圓球＋大兵器」，作者要一個明顯的標誌（2026-10-08 拍板用姓氏大字）
+    **{f'badge-{n}': ([f'raw-{n}'], 'Edit image 1. Keep EVERYTHING exactly the same: the slime, face, costume, hair, weapon, pose, colors, framing and the flat '
+                      f'background color. Only ADD one large round badge on the front of the costume just below the face, centered (it may cover the belt buckle): '
+                      f'a thick polished gold rim around a {bg} disc with the single Traditional Chinese character 「{ch}」 in bold {fg} brush calligraphy filling the disc. '
+                      'The badge is big and clearly readable, about one third of the body width, facing the viewer. The character must be exactly '
+                      f'「{ch}」, written correctly, no other text anywhere.')
+       for n, ch, bg, fg in (('lubu-baihua', '呂', 'deep crimson red', 'gold'), ('liubei', '劉', 'deep green', 'gold'), ('guanyu', '關', 'deep green', 'gold'),
+                             ('zhangfei', '張', 'black', 'gold'), ('diaochan', '貂', 'pale lavender', 'deep purple'))},
     'bg-capital': (['scene'], 'A floating cloud kingdom seen from a distance in the morning: white castle towers and small houses on floating islands among soft clouds, '
                    'and in the very center a huge gentle tree of life with pale golden leaves; hanging from one branch is a single small translucent rainbow jelly egg '
                    'with a tiny golden crown on top. ' + SCENE),
