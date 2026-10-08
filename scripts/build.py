@@ -16,7 +16,7 @@ ART = {k: A + 'art/' + v for k, v in {
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
     **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'lubu-heijin', 'liubei', 'guanyu', 'zhangfei', 'diaochan') for x in ('', '-still')},
-    **{f'slime-{f}': f'walk/slime-{f}.webp' for f in ('prince', 'hime')}}.items()}
+    **{f'slime-{f}{x}': f'walk/slime-{f}{x}.webp' for f in ('prince', 'hime') for x in ('', '-still')}, 'slime-still': 'walk/slime-daily-still.webp'}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),

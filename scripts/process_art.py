@@ -154,7 +154,7 @@ def main():
     for name, src in (('slime-daily', 'sprite-test-daily'),):   # 平常的地圖小人（呂布造型改走下面的聯動造型）
         o = OUT / f'walk/{name}.png'; o.parent.mkdir(parents=True, exist_ok=True)
         strip([resize_pm(Image.open(ROOT / f'assets/concept/{src}.webp'), (DAILY, DAILY))]).save(o); despill(o)
-        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name)
+        im4 = Image.open(o); im4.save(o.with_suffix('.webp'), lossless=True); im4.crop((0, 0, DAILY, DAILY)).save(o.with_name(o.stem + '-still.webp'), lossless=True); o.unlink(); print('ok walk', name)   # 頭像用單格
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
     for name, key in (('lubu-baihua', 'green'), ('lubu-heijin', 'green'), ('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green'), ('diaochan', 'green')):
@@ -191,7 +191,7 @@ def main():
         S = max(DAILY, int(-(-(max(extent(im, cx)) * k + 8) // 4) * 4))
         o = OUT / f'walk/slime-{name}.png'
         strip([ground(place(im, k, cx, S, S - 5))]).save(o); despill(o)
-        Image.open(o).save(o.with_suffix('.webp'), lossless=True); o.unlink(); print('ok walk', name, 'canvas', S)
+        im4 = Image.open(o); im4.save(o.with_suffix('.webp'), lossless=True); im4.crop((0, 0, S, S)).save(o.with_name(o.stem + '-still.webp'), lossless=True); o.unlink(); print('ok walk', name, 'canvas', S)
     for suffix in ('', '-still'):
         src = OUT / f'walk/slime-lubu-{LUBU}{suffix}.webp'
         if src.exists(): src.replace(OUT / f'walk/slime-lubu{suffix}.webp')
