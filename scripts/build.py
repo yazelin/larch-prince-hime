@@ -292,11 +292,11 @@ def nursery():
 def clock_plugin():
     """看不見的時鐘 HUD：記最後在場時間，讀檔時補上離線期間的飢餓與便便。直接寫 playback，玩家不必安裝。"""
     html = (ROOT / 'scripts/plugin/clock.html').read_text()
-    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS}.items():
+    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS, 'OUTFIT_IDS': json.dumps([a for a, _, _ in OUTFITS.values()])}.items():
         html = html.replace(f'__{k}__', str(v))
     read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'rpgState', 'pet_name']
     hud = {'id': 'clock', 'title': '時鐘', 'anchor': 'bottom-left', 'width': 32, 'height': 32, 'offsetX': 0, 'offsetY': 0,
-           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'pet_name'], 'html': html}
+           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'pet_name', 'rpgState'], 'html': html}
     return {'enabled': True, 'playback': {'version': '0.1.0', 'permissions': ['player:ui', 'variables:read', 'variables:write'], 'defaults': {}, 'huds': [hud]}}
 
 

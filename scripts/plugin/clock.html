@@ -6,6 +6,7 @@
 // 常數由 build.py 換掉 __X__。
 var OFF_HUNGER_MS = __OFF_HUNGER_MS__, OFF_HUNGER_STEP = __OFF_HUNGER_STEP__, OFF_POOP_MS = __OFF_POOP_MS__, BEAT_MS = __BEAT_MS__;
 var POOPS = ['poop_a', 'poop_b', 'poop_c'];
+var OUTFIT_IDS = __OUTFIT_IDS__;                  // 造型角色 id：選單「冒險者」照目前角色 id 查名字，要先替它們填好
 var vars = {}, active = false, lastWritten = null, beat = 0;
 
 function set(name, value) { parent.postMessage({ type: 'larch:set', name: name, value: value }, '*'); }
@@ -29,9 +30,12 @@ function sync() {
 function syncName() {                             // 名字存在 rpgState 的 @names（依角色 id），換造型就換了 id；抄到 pet_name 讓文字一直叫得到
   if (!active) return;
   try {
-    var names = (JSON.parse(vars.rpgState || '{}')['@names']) || {};
+    var st = JSON.parse(vars.rpgState || '{}'), names = st['@names'] || {};
     var n = names.ph;
     if (n && n !== vars.pet_name) set('pet_name', n);
+    if (!n || OUTFIT_IDS.every(function (id) { return names[id] === n; })) return;
+    OUTFIT_IDS.forEach(function (id) { names[id] = n; });
+    st['@names'] = names; set('rpgState', JSON.stringify(st));
   } catch (e) {}
 }
 
