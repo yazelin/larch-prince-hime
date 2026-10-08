@@ -1,7 +1,7 @@
 """把 build.py 的結果推上 Larch，圖片走 jsDelivr（釘在已 push 的 commit SHA）。
 用法：python3 scripts/push_larch.py "改了什麼"
 推之前：先 commit 並 push；推完要作者重新整理開著的編輯器分頁，舊分頁會把專案存回舊版。"""
-import json, os, re, subprocess, sys, time, urllib.request, pathlib
+import json, os, re, subprocess, sys, time, urllib.request, urllib.parse, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PID = 'project-6516bec7-4053-4a7c-a45e-2d739be40b12'
 API = f'https://larch.ink/api/agent/projects/{PID}'
@@ -35,10 +35,10 @@ def main(summary):
     sys.argv.append(f'--cdn={sha}')
     sys.path.insert(0, str(ROOT / 'scripts')); import build
     built = build.build()
-    urls = sorted(set(re.findall(r'https://cdn\.jsdelivr\.net/[^"\\]+', json.dumps(built))))
+    urls = sorted(set(re.findall(r'https://cdn\.jsdelivr\.net/[^"\\]+', json.dumps(built, ensure_ascii=False))))   # 家具圖檔名是中文，ensure_ascii 會把網址切在 \u 那裡
     bad = []
     for u in urls:
-        try: urllib.request.urlopen(urllib.request.Request(u, method='HEAD'), timeout=60)
+        try: urllib.request.urlopen(urllib.request.Request(urllib.parse.quote(u, safe=':/@'), method='HEAD'), timeout=60)
         except Exception as e: bad.append((u, e))
     if bad: sys.exit(f'jsDelivr 讀不到：{bad}')
     print(f'{len(urls)} 個圖片網址都讀得到（@{sha[:7]}）')
