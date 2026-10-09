@@ -11,10 +11,13 @@ REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style
            'guanyu_armor': TAOYUAN / 'cast/v_關羽-戰甲_user_norm.webp', 'zhangfei_armor': TAOYUAN / 'cast/v_張飛-戰甲_user_norm.webp',
            'liubei_pose': pathlib.Path.home() / 'xianquan-musou/assets/boss_posters/sanying.webp',
            'diaochan': TAOYUAN / 'cast/lubu/定錨_貂蟬_全圖.webp', 'handkerchief': TAOYUAN / 'cast/lubu/定錨_道具_冷梅帕.webp',
-           'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp'}
+           'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp',
+           # 香布纏另外三件（#5）：兵器用原作的道具圖示（buchan/items.py 產的），衣服用素材庫選定造型的 Q 版
+           'w_weixu': TAOYUAN / 'buchan/items_raw/w-weixu_v1.webp', 'w_quan': TAOYUAN / 'buchan/items_raw/w-quan_v1.webp', 'w_xiang': TAOYUAN / 'buchan/items_raw/w-xiang_v1.webp',
+           'weixu': TAOYUAN / 'buchan/cg_v/qa_weixu_1_v2.webp', 'quan': TAOYUAN / 'buchan/cg_v/qa_quan16_10_v2.webp', 'xiang': TAOYUAN / 'buchan/cg_v/qa_xiang_2_v2.webp'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
 REF.update({f'form-{n}': f'art/raw/form-{n}.png' for n in ('prince', 'hime')})   # 成年禮 CG 用分化後的樣子當定錨
-REF.update({f'raw-{n}': f'art/raw/outfit-{n}.png' for n in ('lubu-baihua', 'liubei', 'guanyu', 'zhangfei', 'diaochan')})   # 徽章改圖用作者認可過的原圖
+REF.update({f'raw-{n}': f'art/raw/outfit-{n}.png' for n in ('lubu-baihua', 'liubei', 'guanyu', 'zhangfei', 'diaochan', 'weixu', 'quan', 'xiang')})   # 徽章改圖用作者認可過的原圖
 
 
 def refs_ready():
@@ -81,6 +84,22 @@ JOBS = {
                         'a small dark brown hair bun on top with a delicate silver hairpin and tiny dangling ornament, dark brown eyes, gentle shy smile. '
                         'No weapon. Instead one nub hand holds up the handkerchief from image 3 beside the body: a small square of white silk with red plum blossoms '
                         'embroidered in one corner and a red tassel with a white jade bead hanging from that corner. ' + ROUND + plate('#00FF00', 'green')),
+    'outfit-weixu': (['slime', 'weixu', 'w_weixu'], OUTFIT + 'Costume of Wei Xu from image 2 (a veteran soldier in iron-grey lamellar armor) turned into a cute slime outfit: '
+                     'a small iron-grey lamellar chest armor made of little riveted plates, shoulder plates on both sides, an earth-brown rough cloth robe-skirt under the armor '
+                     'around the lower body, a dark brown leather belt, a small messy dark brown hair topknot on top tied with a brown cord, dark brown eyes, a steady kind smile. '
+                     'Weapon: the ring-pommel saber exactly as in image 3: a straight single-edged iron-grey blade with forge marks, NO hand guard, dark cord-wrapped grip, '
+                     'a plain iron ring at the end of the grip, no decoration. Held upright by one nub hand beside the body, blade pointing up, ring at the bottom. ' + ROUND + plate('#00FF00', 'green')),
+    'outfit-quan': (['slime', 'quan', 'w_quan'], OUTFIT + 'Costume of Lu Quan from image 2 (a sixteen-year-old archer girl) turned into a cute slime outfit: '
+                    'a short cream-white cross-collar top with green leaf embroidery, a sage green short layered skirt around the lower body, a brown leather belt, '
+                    'small dark brown leather bracers on both nub hands, a high dark brown ponytail on top tied with a long green ribbon, amber eyes, a bright confident smile. '
+                    'Weapon: the small wooden bow exactly as in image 3: a dark brown carved wooden bow with a light green cloth wrap at the grip and a thin string, already strung. '
+                    'Held upright by one nub hand beside the body, the string on the outer side. No arrows, no quiver. ' + ROUND + plate('#0000FF', 'blue')),   # 洋紅幕會吃掉帶粉的奶白身體（內部半透明 7.9 萬 px）
+    'outfit-xiang': (['slime', 'xiang', 'w_xiang'], OUTFIT + 'Costume of Yan Xiang from image 2 (a calm woman in plain grey-blue and earth-brown cloth robes) turned into a cute slime outfit: '
+                     'a plain grey-blue cross-collar robe top with cream inner collar, a long earth-brown wrap skirt with a brown sash around the lower body, '
+                     'only a small dark brown hair bun on the very top held by one simple wooden hairpin, the rest of the round dome stays bare pearl white (NO hair covering the head, NO bangs, like the bun in image 1 style), '
+                     'warm tea-brown eyes, a gentle quiet smile. No jewelry. '
+                     'Weapon: the iron scissors exactly as in image 3: Han dynasty spring scissors made of one bent iron strip, a round ring at the end wrapped with hemp cord, '
+                     'TWO flat dark iron blades clearly visible as a pair, slightly open in a narrow V so they read as scissors (not a knife). Held upright by one nub hand beside the body, blades pointing up, ring at the bottom. ' + ROUND + plate('#00FF00', 'green')),
     # 姓氏玉珮：縮到地圖大小只認得出「奶白圓球＋大兵器」，作者要一個明顯的標誌；大字胸章作者嫌廉價，2026-10-08 改成腰間垂掛的雕花玉珮
     **{f'pendant-{n}': ([f'raw-{n}'], 'Edit image 1. Keep EVERYTHING exactly the same: the slime, face, costume, hair, weapon, pose, colors, framing, size and the flat '
                         f'background color. Only ADD one elegant noble pendant hanging from the front center of the waist belt: a small round {mat} disc pendant '
@@ -90,7 +109,8 @@ JOBS = {
                         f'「{ch}」, written correctly, no other text anywhere.')
        for n, ch, mat, cord in (('lubu-baihua', '呂', 'polished gold with a crimson enamel center', 'crimson red'), ('liubei', '劉', 'white jade', 'jade green'),
                                 ('guanyu', '關', 'deep green jade', 'crimson red'), ('zhangfei', '張', 'black onyx with gold', 'crimson red'),
-                                ('diaochan', '貂', 'pale lavender jade', 'soft purple'))},
+                                ('diaochan', '貂', 'pale lavender jade', 'soft purple'),
+                                ('weixu', '魏', 'smoky grey jade', 'dark brown'), ('quan', '呂', 'pale green jade', 'leaf green'), ('xiang', '嚴', 'blue-grey jade', 'slate blue'))},
     'bg-capital': (['scene'], 'A floating cloud kingdom seen from a distance in the morning: white castle towers and small houses on floating islands among soft clouds, '
                    'and in the very center a huge gentle tree of life with pale golden leaves; hanging from one branch is a single small translucent rainbow jelly egg '
                    'with a tiny golden crown on top. ' + SCENE),
