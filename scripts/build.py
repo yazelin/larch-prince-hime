@@ -424,10 +424,34 @@ def plaza():
     hero = ev('hero', *pt['plaza_arrive'], name='王子姬', actor='player', direction='up', sprite=walk_sprite('slime'))
     out = ev('exit', *pt['plaza_exit'], trigger='touch', marker={'label': '回育嬰室', 'kind': 'exit'},
              actions=[act('jump', cardId='m-nursery', arrive={'x': 24, 'y': 33, 'direction': 'up'})])
+    # 互動（#4）：事件掛在家具佔地格的一整排，寵物從前面任一格都碰得到；標籤只掛中間那格
+    def spot(id, label, cells, **kw):
+        return [ev(f'{id}-{i}', x, y, solid=True, **kw, **({'marker': {'label': label, 'kind': 'talk'}} if i == len(cells) // 2 else {}))
+                for i, (x, y) in enumerate(cells)]
+    pick = lambda id, lines: act('random', random={'min': 1, 'max': len(lines), 'options': [
+        {'id': f'{id}{i}', 'from': i, 'to': i, 'actions': [say(t)]} for i, t in enumerate(lines, 1)]})
+    notice = spot('notice', '公告欄', [(x, 31) for x in range(15, 19)], actions=[pick('nt', [
+        '公告欄上貼著「本月成年禮名單」，{{pet_name}}的名字也在上面，旁邊畫了一頂小金冠。',
+        '王都消息：「生命聖樹今年又高了一截，請勿攀爬。」',
+        '尋物啟事：「國王的白鬍子梳不見了，撿到請送回王宮。」底下有人畫了一把梳子。'])])
+    sit = [balloon('sleep'), pick('bc', ['{{pet_name}}跳上長椅坐好，晃了晃，聽著噴水池的水聲。',
+                                         '{{pet_name}}在長椅上縮成一團，曬了一會兒太陽。',
+                                         '{{pet_name}}坐在長椅上，看著別人的小王子、小公主走過去。'])]
+    benches = [e for n, (x, y) in enumerate([(14, 10), (30, 10), (14, 23), (30, 23)]) for e in spot(f'bench{n}', '長椅', [(x + i, y) for i in range(4)], actions=sit)]
+    has_coin = {'kind': 'item', 'variable': '', 'op': 'gte', 'value': '', 'itemId': 'coin', 'count': 1}
+    wish = {'id': 'wish', 'conditions': [has_coin], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True, 'trigger': 'action', 'once': False,
+            'actions': [act('choice', text='要投一枚王室金幣許願嗎？', speaker='narrator', choice={'cancel': 'no', 'options': [
+                {'id': 'yes', 'label': '投一枚金幣', 'actions': [
+                    act('removeItem', itemId='coin', itemName='王室金幣', amount=1), act('sound', sound='item', audio={'url': '', 'volume': 0.8}),
+                    say('叮咚。金幣沉進池底，水面冒出一圈小小的金光。'), balloon('heart'),
+                    pick('ws', ['{{pet_name}}閉上眼睛許了願，不肯說許了什麼。', '{{pet_name}}許願明天點心籃裡有兩份布丁。', '{{pet_name}}許願下次也要跟你一起來廣場。'])]},
+                {'id': 'no', 'label': '只看看', 'actions': []}]})]}
+    fountain = spot('fountain', '噴水池', [(x, 18) for x in range(21, 27)], actions=[
+        say('噴水池頂端的金色小史萊姆一直在噴水。池底亮亮的，好像有人丟過金幣。'), say('撿到王室金幣再來，可以投一枚許願。')], pages=[wish])
     m = {'version': 1, 'name': '王城中央廣場', 'width': 48, 'height': 36, 'tileSize': 48,
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False, 'tiles': []}],
-         'events': [hero, out], 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, out, *notice, *benches, *fountain], 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
                          'ambience': {'particles': 'petals', 'density': 0.25, 'rays': 0.3, 'clouds': 0.3, 'critters': 'butterflies'}}}
