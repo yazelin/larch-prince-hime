@@ -6,8 +6,9 @@
 // 常數由 build.py 換掉 __X__。
 var OFF_HUNGER_MS = __OFF_HUNGER_MS__, OFF_HUNGER_STEP = __OFF_HUNGER_STEP__, OFF_POOP_MS = __OFF_POOP_MS__, BEAT_MS = __BEAT_MS__;
 var POOPS = ['poop_a', 'poop_b', 'poop_c'];
-var OUTFIT_IDS = __OUTFIT_IDS__;                  // 造型角色 id：選單「冒險者」照目前角色 id 查名字，要先替它們填好
-var vars = {}, active = false, lastWritten = null, beat = 0;
+var OUTFIT_IDS = __OUTFIT_IDS__;
+var DAILY_N = __DAILY_N__;                        // 成年後的日常小事件有幾件                  // 造型角色 id：選單「冒險者」照目前角色 id 查名字，要先替它們填好
+var vars = {}, active = false, lastWritten = null, beat = 0, bornSent = null, pickedDay = '';
 
 function set(name, value) { parent.postMessage({ type: 'larch:set', name: name, value: value }, '*'); }
 function truthy(v) { return v === true || v === 'true'; }
@@ -39,11 +40,27 @@ function syncName() {                             // 名字存在 rpgState 的 @
   } catch (e) {}
 }
 
+function midnight(t) { var d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function ymd(t) { var d = new Date(t); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+
+function syncDays() {                              // 養到第幾天（照本機日期，過午夜就算一天）；成年後每天抽一件日常小事件
+  if (!active) return;
+  if (!truthy(vars.intro_done)) { bornSent = null; return; }   // 重新領養會清掉 born_at，等領養完再記
+  var now = Date.now(), born = Number(vars.born_at) || Number(bornSent) || 0;
+  if (!born) { born = now; bornSent = String(now); set('born_at', bornSent); }
+  var days = 1 + Math.round((midnight(now) - midnight(born)) / 864e5);
+  if (String(days) !== String(vars.days)) set('days', days);
+  var today = ymd(now);
+  if (truthy(vars.adult) && vars.daily_day !== today && pickedDay !== today) {   // pickedDay：變數還沒回傳前別再抽一次
+    pickedDay = today; set('daily_day', today); set('daily_pick', 1 + Math.floor(Math.random() * DAILY_N));
+  }
+}
+
 function heartbeat() {                             // 在場時定時更新最後時間，存檔時就會一起存下來
   clearInterval(beat);
   beat = setInterval(function () {
     if (!active || !truthy(vars.intro_done)) return;
-    lastWritten = Date.now(); set('last_seen', String(lastWritten));
+    lastWritten = Date.now(); set('last_seen', String(lastWritten)); syncDays();
   }, BEAT_MS);
 }
 
@@ -55,7 +72,7 @@ addEventListener('message', function (e) {
   var was = active; active = d.active !== false;
   if (active && !was) heartbeat();
   if (!active) clearInterval(beat);
-  sync(); syncName();
+  sync(); syncName(); syncDays();
 });
 parent.postMessage({ type: 'larch:ready' }, '*');
 </script>

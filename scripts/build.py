@@ -60,6 +60,12 @@ GROW_AT, GROW_HINT, LEAN_SHOW = 300, 260, 2
 ADULT_AT = 400   # 分化後親密度再到這裡，國王的使者送來成年禮的邀請（約再陪玩 12 次）
 VARS['invited'] = ('boolean', False, '收到成年禮的邀請')
 VARS['adult'] = ('boolean', False, '辦過競技場成年禮')   # ponytail: 只看親密度（陪玩 +8、餵食 +3～5，約玩 30 次）；要照天數算再加時鐘 HUD 的天數
+# 養了幾天（#6）與成年後的日常小事件（#3）：時鐘 HUD 記領養那天、算第幾天；成年後每天第一次進來抽一件
+VARS['born_at'] = ('string', '', '領養那天（毫秒；時鐘 HUD 第一次看到時記下，更新前就領養的從更新那天算）')
+VARS['days'] = ('string', '1', '養到第幾天（領養那天是第 1 天；時鐘 HUD 照本機日期算）')   # string 只為了不進暫停選單（同 lean）
+VARS['daily_day'] = ('string', '', '今天的日常小事件抽過了（本機日期）')
+VARS['daily_pick'] = ('string', '0', '今天抽到第幾件日常小事件（0＝沒有或演過了）')
+GROW_DAYS, ADULT_DAYS = 3, 5   # 第 3 天起才會分化、第 5 天起才會收到成年禮邀請（親密度也要到）；一天內玩滿只會等到那天
 FORMS = {'prince': ('ph-prince', '小王子', 'slime-prince'), 'hime': ('ph-hime', '小公主', 'slime-hime')}   # 分化鍵 → (資料庫角色 id, 稱呼, 小人圖)
 CROSS_PERSIST = {f'got_{k}' for k, *_ in CROSS} | {'outfit', 'mirror_new', 'pet_name', 'rpgState', 'lean', 'last_play', 'form', 'grow_hint', 'invited', 'adult'}   # rpgState 裡有名字與位置（實測 166 字，上限 2000）   # 併進下面的 PERSIST
 CROSS_VARS = [f'cross_{k}' for k, *_ in CROSS]   # 引擎依玩家收藏設的字串變數，id 照《無雙》加 rpg- 前綴
@@ -72,7 +78,7 @@ POOP_CELLS = {'poop_a': (9, 13), 'poop_b': (15, 12), 'poop_c': (13, 5)}
 # 跨週目保留（編輯器「玩家變數 → 跨週目保留」）：寵物的狀態都留著，關掉再開就接著養，不用手動存檔。
 # 字串超過 2000 字會被截斷（播放器 Xt=2e3），背包要注意。
 PERSIST = {'intro_done', 'hunger', 'affection', 'poop_a', 'poop_b', 'poop_c', 'last_seen', 'sulky', 'very_sulky', 'fed', 'played', 'inventory'}
-PERSIST |= CROSS_PERSIST
+PERSIST |= CROSS_PERSIST | {'born_at', 'daily_day'}
 # 離線時間（時鐘 HUD）：離開每 1 小時餓 10，每 2 小時一坨便便（最多三坨）；在場時每 60 秒記一次時間
 OFF_HUNGER_MS, OFF_HUNGER_STEP, OFF_POOP_MS, BEAT_MS = 3600000, 10, 7200000, 60000
 AWAY_HI, AWAY_SULK, AWAY_VERY = 60, 480, 4320   # 分鐘：1 小時、8 小時、3 天
@@ -86,6 +92,12 @@ if AWAY_TEST is not None:
 GROW_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--grow=')), None)   # 測試用：開局親密度（例如 --grow=295，玩一次就分化）
 if GROW_TEST is not None:
     VARS['intro_done'] = ('boolean', True, VARS['intro_done'][2]); VARS['affection'] = ('number', GROW_TEST, VARS['affection'][2])
+DAY_TEST = next((int(a.split('=', 1)[1]) for a in sys.argv if a.startswith('--day=')), None)   # 測試用：假裝今天是養的第幾天
+if DAY_TEST is not None:
+    import time
+    VARS['intro_done'] = ('boolean', True, VARS['intro_done'][2]); VARS['born_at'] = ('string', str(int(time.time() * 1000) - (DAY_TEST - 1) * 86400000), VARS['born_at'][2])
+if '--adult' in sys.argv:   # 測試用：已經辦過成年禮的小王子（日常小事件、廣場）
+    VARS.update(intro_done=('boolean', True, ''), form=('string', 'prince', ''), adult=('boolean', True, ''), affection=('number', ADULT_AT, ''), grow_hint=('boolean', True, ''), invited=('boolean', True, ''))
 if '--fast' in sys.argv:   # 測試用：幾秒就餓、就有便便；開局當作已寫過日誌、肚子很餓，任務提示直接指向點心籃
     HUNGER_TICK_MS, POOP_TICK_MS, BEAT_MS = 3000, 4000, 5000
     VARS['intro_done'] = ('boolean', True, VARS['intro_done'][2]); VARS['hunger'] = ('number', 80, VARS['hunger'][2])
@@ -233,6 +245,23 @@ def walk_sprite(key):
             'scale': round(w / TILE_PX, 3), 'faces': 'right'}   # 引擎顯示寬度＝scale 格，跟圖幾 px 無關
 
 
+# 成年後的日常小事件（#3）：每天第一次進育嬰室抽一件，只有台詞。(泡泡圖示, 台詞[字串＝旁白，('player', 字)＝寵物說])
+DAILY = [
+    ('heart', ['國王晃進育嬰室，說只是路過。', '他摸了摸{{pet_name}}的頭，又摸了摸自己的鬍子，才慢吞吞地走了。']),
+    ('question', ['門外傳來三位大臣的聲音，又在吵下午茶該配紅茶還是綠茶。', ('player', '……噗。')]),
+    ('exclamation', [('player', '本宮……餓了。'), '{{pet_name}}學會了一句新的話，說完自己也嚇了一跳。']),
+    ('idea', ['一隻白鴿停在欄杆上，腳上綁著一張紙條：「廣場的噴水池今天特別亮。」']),
+    ('sleep', ['{{pet_name}}在雲朵地毯上睡著了，頭上的小金冠歪到一邊。']),
+    ('music', ['{{pet_name}}把玩具箱裡的星星一個一個排好，排到一半就忘了在排什麼。']),
+    ('rice', ['王宮廚師探頭進來，問{{pet_name}}明天想吃布丁還是鬆餅。', ('player', '兩個都要。')]),
+    ('happy', ['{{pet_name}}在穿衣鏡前轉了一圈，對著鏡子裡的自己點點頭。']),
+    ('sweat', ['雲端王都下了一場小雨。{{pet_name}}趴在欄杆邊，看雨滴從雲朵邊緣掉下去。']),
+    ('happy', ['{{pet_name}}一早就在練習行禮，鞠躬鞠到滾了半圈。']),
+    ('question', ['{{pet_name}}繞著雲朵地毯走了一圈又一圈，說要量量看地毯有多大。']),
+    ('heart', ['競技場的旗手送來一束花，說成年禮那天的表演，大家到現在還在講。']),
+    ('question', ['國王又來了，問有沒有人看到他的白鬍子梳。', '{{pet_name}}搖搖頭，假裝在看別的地方。']),
+]
+
 def nursery():
     # 主角事件不綁 actorId：引擎畫的是資料庫 heroId 那位，hero 步驟換人（換裝）地圖上才會跟著換。sprite 只是佔位（照《無雙》的寫法）
     # 主角：引擎畫資料庫 heroId 那位（換裝＝hero 步驟換人）；事件上的 sprite 是資料庫讀不到時的備用
@@ -245,9 +274,9 @@ def nursery():
         say('房間左邊的小桌子上有一本王室日誌，翻開就看得到{{hero}}今天的狀況。'),
         say('點心籃在嬰兒床旁邊，玩具箱在左下角。{{hero}}的便便會發光，看到了就去撿。'),
         setv('intro_done', True)])
-    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST] + [setv('inventory', '[]'), setv('rpgState', ''), act('jump', cardId='p-capital')]
+    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST - {'daily_day', 'last_seen'}]   # 這兩個不用還原（沒成年不抽日常、時鐘會自己蓋）；一段步驟上限 32 + [setv('inventory', '[]'), setv('rpgState', ''), act('jump', cardId='p-capital')]
     def journal_acts(line):
-        return [say('{{pet_name}}　肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'), say(line),
+        return [say('{{pet_name}}來到王宮的第 {{days}} 天　肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'), say(line),
             act('choice', text='要做什麼？', speaker='narrator', choice={'cancel': 'close', 'options': [
                 {'id': 'close', 'label': '闔上日誌', 'actions': []},
                 {'id': 'replay', 'label': '重看序章', 'actions': [act('jump', cardId='p-capital')]},
@@ -263,8 +292,11 @@ def nursery():
                  pages=[journal_page(id, cs, line) for id, cs, line in (   # 後面的分頁優先
                      ('lean-prince', [cond('form', ''), cond('lean', LEAN_SHOW, 'gte')], '最近的{{pet_name}}，比較像一位小王子。'),
                      ('lean-hime', [cond('form', ''), cond('lean', -LEAN_SHOW, 'lte')], '最近的{{pet_name}}，比較像一位小公主。'),
+                     ('wait-grow', [cond('form', ''), cond('affection', GROW_AT, 'gte'), cond('days', GROW_DAYS - 1, 'lte')], '{{pet_name}}好像快要長大了，再陪牠過幾天看看。'),   # 親密度夠了、天數還沒到（#6）
                      ('is-prince', [cond('form', 'prince')], '{{pet_name}}是王都的小王子。'),
                      ('is-hime', [cond('form', 'hime')], '{{pet_name}}是王都的小公主。'),
+                     ('wait-adult', [cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('affection', ADULT_AT, 'gte'), cond('days', ADULT_DAYS - 1, 'lte')],
+                      '國王說，成年禮要等{{pet_name}}再大一點。再陪牠過幾天吧。'),
                      ('adult-prince', [cond('form', 'prince'), cond('adult', True)], '{{pet_name}}辦過成年禮了，是王都正式的小王子。'),
                      ('adult-hime', [cond('form', 'hime'), cond('adult', True)], '{{pet_name}}辦過成年禮了，是王都正式的小公主。'))])
     loop = lambda: act('loop', loop={})
@@ -330,17 +362,17 @@ def nursery():
     restores = [ev(f'outfit-{o}', 11 + i, 0, trigger='auto', conditions=[cond('outfit', o)], actions=[act('hero', value=OUTFITS[o][0])])
                 for i, o in enumerate(OUTFITS)]
     # 分化：親密度到 GROW_AT，傾向正→小王子、負→小公主、打平照最後一次玩的遊戲（還沒玩過就等）。事件放在第 1 列（新舊地圖都是牆）
-    grow_c = [cond('form', ''), cond('affection', GROW_AT, 'gte')]
+    grow_c = [cond('form', ''), cond('affection', GROW_AT, 'gte'), cond('days', GROW_DAYS, 'gte')]
     grow = lambda id, x, f, cs: ev(id, x, 1, trigger='condition', conditions=grow_c + cs, actions=[
         balloon('music'), say('噗……啾？', speaker='player'), say('{{pet_name}}全身亮起柔柔的光，光裡傳來小小的、很開心的笑聲。'),
         setv('form', f), setv('base_ok', False), say(f'光散開的時候，{{{{pet_name}}}}變成了一位{FORMS[f][1]}。'), balloon('heart'),
         say('穿衣鏡的「平常」也換成了新的樣子。聯動造型照樣穿得上。')])
     grows = [grow('grow-p1', 1, 'prince', [cond('lean', 1, 'gte')]), grow('grow-p2', 2, 'prince', [cond('lean', 0), cond('last_play', 'prince')]),
              grow('grow-h1', 3, 'hime', [cond('lean', -1, 'lte')]), grow('grow-h2', 4, 'hime', [cond('lean', 0), cond('last_play', 'hime')])]
-    hint = ev('grow-hint', 5, 1, trigger='condition', conditions=[cond('form', ''), cond('grow_hint', True, 'neq'), cond('affection', GROW_HINT, 'gte')], actions=[
+    hint = ev('grow-hint', 5, 1, trigger='condition', conditions=[cond('form', ''), cond('grow_hint', True, 'neq'), cond('affection', GROW_HINT, 'gte'), cond('days', GROW_DAYS, 'gte')], actions=[
         say('……啾。身體好像熱熱的。', speaker='player'), say('{{pet_name}}最近很常發呆，好像快要長大了。'), setv('grow_hint', True)])
     # 成年禮：分化後親密度到 ADULT_AT，使者送邀請；從門口出發（門口在地圖最下面正中的地墊上，寵物站在上面一格往下按）
-    invite = ev('invite', 10, 1, trigger='condition', conditions=[cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('invited', True, 'neq'), cond('affection', ADULT_AT, 'gte')], actions=[
+    invite = ev('invite', 10, 1, trigger='condition', conditions=[cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('invited', True, 'neq'), cond('affection', ADULT_AT, 'gte'), cond('days', ADULT_DAYS, 'gte')], actions=[
         balloon('exclamation'), say('門口傳來敲門聲。國王的使者送來一封信，封蠟上是那頂小金冠。'),
         say('「{{pet_name}}的成年禮，在競技場舉行。準備好了，就從育嬰室門口出發。」'), setv('invited', True)])
     door = ev('door', 11, 17, solid=True, marker={'label': '門口', 'kind': 'talk'}, actions=[say('門外是王宮的長廊。國王說過，沒事不要帶牠亂跑。')], pages=[
@@ -356,6 +388,9 @@ def nursery():
              for i, (f, (aid, _, _)) in enumerate(FORMS.items())] + [
             ev(f'base-{f}-now', 8 + i, 1, trigger='condition', conditions=[cond('outfit', ''), cond('form', f), cond('base_ok', True, 'neq')],
                actions=[act('hero', value=aid), setv('base_ok', True)]) for i, (f, (aid, _, _)) in enumerate(FORMS.items())]
+    daily = [ev(f'daily-{i}', 10 + i, 1, trigger='condition', conditions=[cond('daily_pick', i), cond('sulky', True, 'neq')],
+                actions=[setv('daily_pick', 0), *waits(1500), balloon(b), *[say(t[1], speaker='player') if isinstance(t, tuple) else say(t) for t in lines]])
+             for i, (b, lines) in enumerate(DAILY, 1)]   # 鬧脾氣時先不演，和好後條件成立才演
     away = lambda lo, hi=None: [cond('away_minutes', lo, 'gte')] + ([cond('away_minutes', hi, 'lte')] if hi else [])
     bubble = lambda t: say(t, speaker='player', pres='bubble')
     welcome = ev('back-hi', 6, 0, trigger='condition', conditions=away(AWAY_HI, AWAY_SULK - 1), actions=[
@@ -382,7 +417,7 @@ def nursery():
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
                      'tiles': ['kn-dungeon:0' if (i % W, i // W) in walls() else None for i in range(W * H)]}],
-         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases + [invite, door], 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases + [invite, door] + daily, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],
@@ -468,11 +503,11 @@ def plaza():
 def clock_plugin():
     """看不見的時鐘 HUD：記最後在場時間，讀檔時補上離線期間的飢餓與便便。直接寫 playback，玩家不必安裝。"""
     html = (ROOT / 'scripts/plugin/clock.html').read_text()
-    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS, 'OUTFIT_IDS': json.dumps([v[0] for v in OUTFITS.values()] + [v[0] for v in FORMS.values()])}.items():
+    for k, v in {'OFF_HUNGER_MS': OFF_HUNGER_MS, 'OFF_HUNGER_STEP': OFF_HUNGER_STEP, 'OFF_POOP_MS': OFF_POOP_MS, 'BEAT_MS': BEAT_MS, 'DAILY_N': len(DAILY), 'OUTFIT_IDS': json.dumps([v[0] for v in OUTFITS.values()] + [v[0] for v in FORMS.values()])}.items():
         html = html.replace(f'__{k}__', str(v))
-    read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'rpgState', 'pet_name']
+    read = ['intro_done', 'last_seen', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'rpgState', 'pet_name', 'born_at', 'days', 'daily_day', 'adult']
     hud = {'id': 'clock', 'title': '時鐘', 'anchor': 'bottom-left', 'width': 32, 'height': 32, 'offsetX': 0, 'offsetY': 0,
-           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'pet_name', 'rpgState'], 'html': html}
+           'interactive': False, 'readVariables': read, 'writeVariables': ['last_seen', 'away_minutes', 'hunger', 'poop_a', 'poop_b', 'poop_c', 'pet_name', 'rpgState', 'born_at', 'days', 'daily_day', 'daily_pick'], 'html': html}
     return {'enabled': True, 'playback': {'version': '0.1.0', 'permissions': ['player:ui', 'variables:read', 'variables:write'], 'defaults': {}, 'huds': [hud]}}
 
 
@@ -494,6 +529,13 @@ def build():
         N.append(choice_card(*c))
         E += [edge(c[0], dst, f'choice-{i}') for i, (_, dst) in enumerate(c[4])]
     N.append(nursery()); N.append(plaza())
+    def steps(acts):   # 引擎上限：每一段步驟最多 32 個（超過整個播放器會壞掉）
+        for x in acts:
+            for o in (x.get('choice') or {}).get('options', []) + (x.get('random') or {}).get('options', []): steps(o.get('actions', []))
+        assert len(acts) <= 32, f'一段步驟 {len(acts)} 個，超過 32'
+    for n in N:
+        for e in json.loads(n['data'].get('pluginValues', {}).get('map', '{"events": []}'))['events']:
+            for acts in [e.get('actions', [])] + [pg.get('actions', []) for pg in e.get('pages', [])]: steps(acts)
     # 開機分流（起點）：有條件的線先判，第一條無條件的當預設。同一出口兩條線，推送一定要走 PUT board（整包 PUT 會去重）
     N.insert(0, {'id': 'route', 'type': 'story', 'position': {'x': -400, 'y': 0}, 'data': {'type': 'setVariable', 'title': '開機分流', 'text': '', 'start': True,
                  'variableOps': [{'id': 'route-0', 'variable': 'booted', 'kind': 'set', 'value': 'true'}]}})
