@@ -23,7 +23,7 @@ KING = '國王'
 VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目）'), 'booted': ('boolean', False, '開機分流用'),
         'hunger': ('number', 30, '肚子餓（0–100）'), 'affection': ('number', 0, '親密度'),
         'poop_a': ('boolean', False, '便便 A 在不在'), 'poop_b': ('boolean', False, '便便 B 在不在'), 'poop_c': ('boolean', False, '便便 C 在不在'),
-        'last_seen': ('string', '', '最後在場時間'), 'away_minutes': ('number', 0, '上次離開了幾分鐘'),   # last_seen 用字串：選單「角色狀態」只列數字變數，毫秒數不該給玩家看
+        'last_seen': ('string', '', '最後在場時間'), 'away_minutes': ('string', '0', '上次離開了幾分鐘'),   # last_seen 用字串：選單「角色狀態」只列數字變數，毫秒數不該給玩家看
         'sulky': ('boolean', False, '在鬧脾氣（餵了就和好）'), 'very_sulky': ('boolean', False, '大鬧脾氣（要先陪玩）'),
         'fed': ('boolean', False, '鬧脾氣後餵過'), 'played': ('boolean', False, '鬧脾氣後玩過')}
 # 作品聯動：原作品在「取得道具」卡打開 crossover，玩家在原作拿到過，這裡的 cross_<鍵> 就會是 "true"（引擎設的字串）。
@@ -51,7 +51,7 @@ VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
 VARS['mirror_new'] = ('boolean', False, '有新造型還沒去穿衣鏡')
 VARS['pet_name'] = ('string', '', '寵物的名字（時鐘 HUD 從 rpgState 抄出來，換造型也不變）')
 # 王子／公主分化（2026-10-09 作者：照顧的方式決定，docs/03 開頭〈分化（拍板版）〉）：玩具箱選的遊戲累積傾向，親密度到 GROW_AT 時分化
-VARS['lean'] = ('number', 0, '小王子(+)／小公主(−)傾向')
+VARS['lean'] = ('string', '0', '小王子(+)／小公主(−)傾向')   # 宣告成 string 只為了不出現在暫停選單（選單只列 number）；引擎比大小、加減都先轉 Number，等於比對轉 String，所以預設要是 '0'（#2）
 VARS['last_play'] = ('string', '', '最後一次玩的遊戲（prince／hime；傾向打平時照它）')
 VARS['form'] = ('string', '', '分化後的樣子（空字串＝還沒分化、prince、hime）')
 VARS['grow_hint'] = ('boolean', False, '分化前的預告說過了')
