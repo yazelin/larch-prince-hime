@@ -524,14 +524,27 @@ def clock_plugin():
     return {'enabled': True, 'playback': {'version': '0.1.0', 'permissions': ['player:ui', 'variables:read', 'variables:write'], 'defaults': {}, 'huds': [hud]}}
 
 
+# 對戰（#1）：引擎拿「目前主角」資料庫角色的 growth 當數值、skills 當技能（對戰是雙方同時選攻擊／技能／防禦，不扣真血）。
+# HP 大家都 100（地圖上的血條不變）；小王子攻擊高、小公主魔力高。平常那隻與聯動造型用基本數值（造型是兩種共用的同一個角色）
+SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
+    ('bubble', '泡泡撞擊', 'bolt', 'spark', 14, 5), ('sword', '木劍突刺', 'bolt', 'spark', 22, 8), ('cape', '披風旋風', 'nova', 'ice', 30, 14),
+    ('star', '星星餅乾', 'bolt', 'holy', 18, 6), ('tea', '一杯熱紅茶', 'heal', 'heal', 28, 10)]
+STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
+         'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
+         'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea'])}
+
 def database():
-    def actor(id, sprite, role='party'):
+    def stats(kind):
+        st, sk = STATS[kind]
+        return {'growth': {'maxLevel': 2, 'curve': 'even', 'pace': 'normal', 'hp': [100, 100], **{k: [v, v] for k, v in st.items()}},   # 沒有經驗值來源，一直是 1 級
+                'skills': [{'id': i} for i in sk]}
+    def actor(id, sprite, role='party', kind='base'):
         walk = walk_sprite(sprite)
         return {'id': id, 'name': '王子姬', 'title': '', 'profile': '', 'role': role, 'walk': walk, 'portrait': ART.get(sprite + '-still', ART[sprite]),   # walk 直接放 sprite 物件（包一層 {sprite} 引擎讀不到，會退回事件上的小人圖）
-                'kit': 'none', 'rig': 'slime', 'joinVariable': '', **({'speed': 2} if LAYERED else {})}   # 細格一步只有半格，速度加倍手感不變
+                'kit': 'none', 'rig': 'slime', 'joinVariable': '', **stats(kind), **({'speed': 2} if LAYERED else {})}   # 細格一步只有半格，速度加倍手感不變
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
-            'actors': [actor('ph', 'slime')] + [actor(v[0], v[2], 'npc') for v in OUTFITS.values()] + [actor(v[0], v[2], 'npc') for v in FORMS.values()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
+            'actors': [actor('ph', 'slime')] + [actor(v[0], v[2], 'npc') for v in OUTFITS.values()] + [actor(v[0], v[2], 'npc', f) for f, v in FORMS.items()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
 
 def build():
     p = json.loads((ROOT / 'skeleton/project.json').read_text())
@@ -577,16 +590,17 @@ def build():
     rpg = s['plugins']['larch-rpg-system']['settings']
     rpg['database'] = json.dumps(database(), ensure_ascii=False)
     # 狀態靠跨週目變數保留，選單不放存檔／讀檔：讀舊檔和跨週目值打架的情況就不會發生
-    # 多人連線只開在王城中央廣場（育嬰室放 soloMaps）；對戰等寵物有數值再開。push_larch 整份覆寫這個插件設定，所以連線設定也在這裡管
+    # 多人連線只開在王城中央廣場（育嬰室放 soloMaps）；對戰數值在 STATS（#1）。push_larch 整份覆寫這個插件設定，所以連線設定也在這裡管
     rpg['online'] = json.dumps({'version': 1, 'enabled': True, 'access': 'everyone', 'channelMode': 'auto', 'channelList': [{'id': 'ch-1', 'name': '王城', 'icon': '🌲'}],
         'channelSize': 50, 'chat': 'free', 'filter': True, 'blockedWords': [], 'phrases': ['你好！', '謝謝！', '一起走吧', '等我一下', '好喔', '哈哈哈', '加油！', '掰掰～'],
         'nameTags': True, 'soloMaps': ['m-nursery'], 'welcome': '這裡是王城中央廣場。按 T 聊天、按 Y 做表情，跟其他王族打聲招呼吧。',
         'hud': {'corner': 'bl', 'x': 1.5, 'y': 2.5, 'scale': 1, 'chip': True, 'chat': True, 'emote': True, 'friends': True, 'log': True},
-        'social': {'friends': True, 'dm': True, 'teleport': 'off', 'duel': False, 'duelParty': False}}, ensure_ascii=False, separators=(',', ':'))
+        'social': {'friends': True, 'dm': True, 'teleport': 'off', 'duel': True, 'duelParty': False}}, ensure_ascii=False, separators=(',', ':'))
     rpg['lobby'] = json.dumps({'version': 1, 'looks': [], 'colors': True, 'eyebrow': '多人世界 · ONLINE', 'title': '和其他旅人一起冒險',
         'note': '劇情與寵物都是你自己的，只有位置、聊天和表情會分享', 'enterLabel': '進入世界', 'soloLabel': '先單人玩', 'channelPicker': 'auto', 'mode': 'auto'},
         ensure_ascii=False, separators=(',', ':'))
     rpg['menuUi'] = json.dumps({'preset': 'sakura', 'buttons': ['status', 'bag', 'settings', 'title']}, ensure_ascii=False)
+    rpg['skills'] = json.dumps([{'id': i, 'name': n, 'shape': sh, 'effect': fx, 'power': pw, 'cost': c, 'cooldown': 1} for i, n, sh, fx, pw, c in SKILLS], ensure_ascii=False)
     rpg['items'] = json.dumps([{'id': 'coin', 'name': '王室金幣', 'icon': ART['coin'], 'note': '黃金便便換來的金幣。', 'heal': 0,
                                 'bag': {'consumable': False, 'effectKind': 'none', 'effectVar': '', 'effectValue': '',
                                         'useConditionVariable': '', 'useConditionValue': '', 'useConditionMessage': ''}}]
