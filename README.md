@@ -33,6 +33,7 @@
 ## 📂 文件導覽
 
 - `listing/`：市集上架用的簡介（description.txt）、標籤（tags.txt）、更新說明（release-notes.md，每次發佈貼進備註欄）。
+- `docs/larch-platform-issues.md`：要向 Larch 官方回報的平台問題，一條一個錨點（`#p1`、`#p2`…），可以直接貼連結。碰到新的平台問題就往下加。
 
 - [01. 遊戲核心設計與世界觀設定](docs/01-game-concept.md)：世界觀、萌蛋孵化期、性別轉化矩陣、日常照料細節。
 - [02. Larch RPG 技術可行性與連線架構](docs/02-larch-rpg-architecture.md)：單機培育循環實作、線上模式特性與邊界、Duel 決鬥機制、密令聯姻方案。
