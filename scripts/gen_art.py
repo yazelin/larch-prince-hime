@@ -93,7 +93,8 @@ JOBS = {
                     'a short cream-white cross-collar top with green leaf embroidery, a sage green short layered skirt around the lower body, a brown leather belt, '
                     'small dark brown leather bracers on both nub hands, a high dark brown ponytail on top tied with a long green ribbon, amber eyes, a bright confident smile. '
                     'Weapon: the small wooden bow exactly as in image 3: a dark brown carved wooden bow with a light green cloth wrap at the grip and a thin string, already strung. '
-                    'Held upright by one nub hand beside the body, the string on the outer side. No arrows, no quiver. ' + ROUND + plate('#0000FF', 'blue')),   # 洋紅幕會吃掉帶粉的奶白身體（內部半透明 7.9 萬 px）
+                    'Held upright by one nub hand gripping the middle of the bow, beside the body, like an archer holding a bow at rest: the STRING is on the side facing the slime body (between the bow and the body), '
+                    'and the curved wooden limbs bulge OUTWARD away from the body. No arrows, no quiver. ' + ROUND + plate('#0000FF', 'blue')),   # 洋紅幕會吃掉帶粉的奶白身體（內部半透明 7.9 萬 px）   # 2026-10-10 作者：弓拿反了（第一版弦朝外、弓背朝身體）
     'outfit-xiang': (['slime', 'xiang', 'w_xiang'], OUTFIT + 'Costume of Yan Xiang from image 2 (a calm woman in plain grey-blue and earth-brown cloth robes) turned into a cute slime outfit: '
                      'a plain grey-blue cross-collar robe top with cream inner collar, a long earth-brown wrap skirt with a brown sash around the lower body, '
                      'only a small dark brown hair bun on the very top held by one simple wooden hairpin, the rest of the round dome stays bare pearl white (NO hair covering the head, NO bangs, like the bun in image 1 style), '
