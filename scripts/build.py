@@ -555,10 +555,10 @@ def build():
         N.append(choice_card(*c))
         E += [edge(c[0], dst, f'choice-{i}') for i, (_, dst) in enumerate(c[4])]
     N.append(nursery()); N.append(plaza())
-    def steps(acts):   # 引擎上限：每一段步驟最多 32 個（超過整個播放器會壞掉）
+    def steps(acts):   # 引擎上限：每一段步驟最多 999 個（2026-10-11 官方從 32 放寬；原本超過 32 整個播放器會壞掉）
         for x in acts:
             for o in (x.get('choice') or {}).get('options', []) + (x.get('random') or {}).get('options', []): steps(o.get('actions', []))
-        assert len(acts) <= 32, f'一段步驟 {len(acts)} 個，超過 32'
+        assert len(acts) <= 999, f'一段步驟 {len(acts)} 個，超過 999'
     for n in N:
         for e in json.loads(n['data'].get('pluginValues', {}).get('map', '{"events": []}'))['events']:
             for acts in [e.get('actions', [])] + [pg.get('actions', []) for pg in e.get('pages', [])]: steps(acts)
