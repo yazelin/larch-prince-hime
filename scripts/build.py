@@ -277,7 +277,10 @@ def nursery():
         say('房間左邊的小桌子上有一本王室日誌，翻開就看得到{{hero}}今天的狀況。'),
         say('點心籃在嬰兒床旁邊，玩具箱在左下角。{{hero}}的便便會發光，看到了就去撿。'),
         setv('intro_done', True)])
-    reset = [setv(k, BASE_DEFAULTS[k]) for k in VARS if k in PERSIST - {'daily_day', 'last_seen'}]   # 這兩個不用還原（沒成年不抽日常、時鐘會自己蓋）；一段步驟上限 32 + [setv('inventory', '[]'), setv('rpgState', ''), act('jump', cardId='p-capital')]
+    val = lambda v: str(v).lower() if isinstance(v, bool) else str(v)
+    reset = [act('reset', reset={'sets': [{'variable': k, 'value': val(BASE_DEFAULTS[k])} for k in VARS if k in PERSIST]   # 官方 2026-10-10 新增的「批次重設變數」步驟：一步設多個，不佔步驟數
+                                          + [{'variable': 'inventory', 'value': '[]'}, {'variable': 'rpgState', 'value': ''}]}),
+             act('jump', cardId='p-capital')]
     def journal_acts(line):
         return [say('{{pet_name}}來到王宮的第 {{days}} 天　肚子餓的程度：{{hunger}}／100　親密度：{{affection}}'), say(line),
             act('choice', text='要做什麼？', speaker='narrator', choice={'cancel': 'close', 'options': [
