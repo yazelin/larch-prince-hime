@@ -16,7 +16,7 @@ ART = {k: A + 'art/' + v for k, v in {
     'arena': 'bg/arena.webp', 'adult-prince': 'cg/adult-prince.webp', 'adult-hime': 'cg/adult-hime.webp',
     'hatch': 'cg/hatch.webp', 'egg-rug': 'cg/egg-rug.webp', 'king': 'portrait/king.webp', 'journal': 'props/journal.webp', 'nursery': 'maps/nursery.webp',
     'slime': 'walk/slime-daily.webp', 'basket': 'props/basket.webp', 'poop': 'props/poop.webp', 'coin': 'props/coin.webp', 'gift': 'props/gift.webp',
-    **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'lubu-heijin', 'liubei', 'guanyu', 'zhangfei', 'diaochan', 'weixu', 'quan', 'xiang') for x in ('', '-still')},
+    **{f'slime-{o}{x}': f'walk/slime-{o}{x}.webp' for o in ('lubu', 'lubu-heijin', 'liubei', 'guanyu', 'zhangfei', 'diaochan', 'weixu', 'quan', 'xiang', 'sheep') for x in ('', '-still')},
     **{f'slime-{f}{x}': f'walk/slime-{f}{x}.webp' for f in ('prince', 'hime') for x in ('', '-still')}, 'slime-still': 'walk/slime-daily-still.webp'}.items()}
 ART['cover'] = A + 'cover/cover-v3.webp'   # 封面沿用 assets/cover，不另存一份
 KING = '國王'
@@ -29,6 +29,7 @@ VARS = {'intro_done': ('boolean', False, '看過序章、領養了（跨週目�
 # 作品聯動：原作品在「取得道具」卡打開 crossover，玩家在原作拿到過，這裡的 cross_<鍵> 就會是 "true"（引擎設的字串）。
 # 數值跟著原作品走；這 8 件是背包道具，本身沒有戰鬥數值，在本作是禮物與造型解鎖。格式照《無雙》已經在用的寫法。
 BUCHAN, TAOYUAN = 'project-1980dcc9-13b3-451c-8bf6-71b05bd5bfa9', 'project-6e031e3a-f508-4d77-aaa2-795edb6a80f4'
+SHEEP = 'project-49bb94d5-1871-4eaa-b8cf-f10ee2deeae7'   # 《綿羊日常：飼養綿羊》（陳怡珊）；羊毛團是可用掉的道具，玩家在原作用掉以後收藏還在不在沒驗過
 CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的一句, 解鎖的造型)
     ('lubu', BUCHAN, 'w-lubu', '方天畫戟', '仙泉谷', '暗紅的長杆，刃下一束紅纓。', 'lubu'),
     ('weixu', BUCHAN, 'w-weixu', '環首刀', '仙泉谷', '刀柄末端有一個鐵環。', 'weixu'),
@@ -38,19 +39,21 @@ CROSS = [  # (鍵, 原作品, 原道具 id, 名稱, 送禮地點, 拆開時的�
     ('liubei', TAOYUAN, 'w-liubei', '雙股劍', '涿郡桃園', '一雌一雄兩把劍。', 'liubei'),
     ('guanyu', TAOYUAN, 'w-guanyu', '青龍偃月刀', '涿郡桃園', '刀身削成一彎新月。', 'guanyu'),
     ('zhangfei', TAOYUAN, 'w-zhangfei', '丈八蛇矛', '涿郡桃園', '矛頭彎彎的，像一條蛇。', 'zhangfei'),
+    ('sheep', SHEEP, '001', '羊毛團', '小羊的牧場', '軟軟的，還留著小羊身上的味道。', 'sheep'),
 ]
-WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義'}
+WORKS = {BUCHAN: '仙泉．香布纏', TAOYUAN: '咒泉．三結義', SHEEP: '綿羊日常：飼養綿羊'}
 OUTFITS = {'lubu': ('ph-lubu', '方天畫戟・百花', 'slime-lubu', 'lubu'), 'heijin': ('ph-lubu-heijin', '方天畫戟・黑金', 'slime-lubu-heijin', 'lubu'),
            'liubei': ('ph-liubei', '雙股劍', 'slime-liubei', 'liubei'),
            'guanyu': ('ph-guanyu', '青龍偃月刀', 'slime-guanyu', 'guanyu'), 'zhangfei': ('ph-zhangfei', '丈八蛇矛', 'slime-zhangfei', 'zhangfei'),
            'diaochan': ('ph-diaochan', '冷梅帕', 'slime-diaochan', 'diaochan'),
            'weixu': ('ph-weixu', '環首刀', 'slime-weixu', 'weixu'), 'quan': ('ph-quan', '小木弓', 'slime-quan', 'quan'),
-           'xiang': ('ph-xiang', '鐵剪刀', 'slime-xiang', 'xiang')}   # #5：魏續、呂荃、嚴湘   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖, 解鎖它的聯動禮物)；方天畫戟一件解鎖呂布兩套
+           'xiang': ('ph-xiang', '鐵剪刀', 'slime-xiang', 'xiang'), 'sheep': ('ph-sheep', '小綿羊', 'slime-sheep', 'sheep')}   # #5：魏續、呂荃、嚴湘   # 造型鍵 → (資料庫角色 id, 名稱, 小人圖, 解鎖它的聯動禮物)；方天畫戟一件解鎖呂布兩套
 UNLOCKS = list(dict.fromkeys(v[3] for v in OUTFITS.values()))   # 解鎖造型的禮物（穿衣鏡依「拿到哪幾件」分頁）
 for k, *_ in CROSS:
     VARS[f'got_{k}'] = ('boolean', False, f'領過聯動禮物 {k}')
 VARS['outfit'] = ('string', '', '目前的造型（空字串＝平常）')
 VARS['mirror_new'] = ('boolean', False, '有新造型還沒去穿衣鏡')
+VARS['gift_waiting'] = ('boolean', False, '禮物箱裡有還沒領的聯動禮物（任務提示用）')
 VARS['mirror_menu'] = ('string', '', '穿衣鏡選了哪一國的造型（條件事件接手列出拿到的那幾套）')
 VARS['pet_name'] = ('string', '', '寵物的名字（時鐘 HUD 從 rpgState 抄出來，換造型也不變）')
 # 王子／公主分化（2026-10-09 作者：照顧的方式決定，docs/03 開頭〈分化（拍板版）〉）：玩具箱選的遊戲累積傾向，親密度到 GROW_AT 時分化
@@ -342,7 +345,7 @@ def nursery():
     # 禮物箱：放在沙發上（牆格），小人只能從左邊 (20,12) 靠近，按右鍵只會轉身。每件一個分頁，一次領一件。
     def gift_page(k, work, ref, name, place, line, outfit):
         acts = [say(f'國王的使者送來一個包裹，封蠟上寫著「{place}」。'), say(f'裡面是{name}。{line}'),
-                act('item', itemId=f'cx-{k}', itemName=name, amount=1), setv(f'got_{k}', True), balloon('heart')]
+                act('item', itemId=f'cx-{k}', itemName=name, amount=1), setv(f'got_{k}', True), setv('gift_waiting', False), balloon('heart')]
         if outfit:
             got = [v[1] for v in OUTFITS.values() if v[3] == k]
             acts += [say(f'穿衣鏡那邊多了{"兩" if len(got) == 2 else "一"}套造型：{"、".join(got)}。'), setv('mirror_new', True)]
@@ -351,17 +354,21 @@ def nursery():
     gift = ev('gift', 21, 12, solid=True, free={'url': ART['gift'], 'x': 20.6, 'y': 10.9, 'w': 1.3, 'h': 1.3},
               marker={'label': '禮物箱', 'kind': 'talk'}, actions=[say('禮物箱現在是空的。別的王國送東西來的時候，會先放在這裡。')],
               pages=[gift_page(*c) for c in reversed(CROSS)])   # 後面的分頁優先：照清單順序一件一件給
+    # 任務提示每件一條會超過 16 條：還有沒領的禮物就設 gift_waiting（領完一件清掉，下一件的事件再設回來）。第 1 列右半是牆（舊地圖只有 24 寬，--old-map 會落在圖外）
+    gift_wait = [ev(f'gift-wait-{k}', 24 + i, 1, trigger='condition', conditions=[cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq'), cond('gift_waiting', True, 'neq')],
+                    actions=[setv('gift_waiting', True)]) for i, (k, *_) in enumerate(CROSS)]
     # 穿衣鏡：貝殼鏡上緣 (2,4)（牆格），小人只能從右邊 (3,4) 靠近，按左鍵只會轉身。
     wear = lambda okey: [act('hero', value=OUTFITS[okey][0] if okey else 'ph'), setv('outfit', okey)] + ([] if okey else [setv('base_ok', False)])   # 換回平常：分化過的由 base-*-now 接手
     # 選項不能各自帶條件、一個事件最多 98 頁；聯動禮物 8 件的組合太多，改成兩層（#5）：
     # 穿衣鏡先選哪一國 → 設 mirror_menu → 那一國「拿到哪幾件」的每種組合各一個條件事件，只列拿到的造型
     work_of = {k: w for k, w, *_ in CROSS}
     GROUPS = [('buchan', '仙泉谷的造型', '仙泉谷', [u for u in UNLOCKS if work_of[u] == BUCHAN]),
-              ('taoyuan', '涿郡桃園的造型', '涿郡桃園', [u for u in UNLOCKS if work_of[u] == TAOYUAN])]
+              ('taoyuan', '涿郡桃園的造型', '涿郡桃園', [u for u in UNLOCKS if work_of[u] == TAOYUAN]),
+              ('sheep', '小羊牧場的造型', '小羊的牧場', [u for u in UNLOCKS if work_of[u] == SHEEP])]
     def mirror_sub(g, us, have, cell):
         cs = [cond('mirror_menu', g)] + [cond(f'got_{u}', True, 'eq' if u in have else 'neq') for u in us]
         if not have:
-            return ev(f'mm-{g}-none', *cell, trigger='condition', conditions=cs, actions=[setv('mirror_menu', ''), say(f'還沒收到{dict((a, c) for a, _, c, _ in GROUPS)[g]}送來的兵器。')])
+            return ev(f'mm-{g}-none', *cell, trigger='condition', conditions=cs, actions=[setv('mirror_menu', ''), say(f'還沒收到{dict((a, c) for a, _, c, _ in GROUPS)[g]}送來的{"禮物" if g == "sheep" else "兵器"}。')])
         opts = [{'id': f'o-{o}', 'label': v[1], 'actions': wear(o)} for o, v in OUTFITS.items() if v[3] in have] + [{'id': 'keep', 'label': '不換', 'actions': []}]
         return ev(f'mm-{g}-' + '-'.join(have), *cell, trigger='condition', conditions=cs,
                   actions=[setv('mirror_menu', ''), act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': opts})])
@@ -371,7 +378,7 @@ def nursery():
             [{'id': 'plain', 'label': '平常', 'actions': wear('')}] + [{'id': g, 'label': lab, 'actions': [setv('mirror_menu', g)]} for g, lab, _, _ in GROUPS]
             + [{'id': 'keep', 'label': '不換', 'actions': []}]})]
     mirror = ev('mirror', 2, 4, solid=True, marker={'label': '穿衣鏡', 'kind': 'talk'}, actions=[
-        say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的兵器以後，可以在這裡換造型。')],
+        say('鏡子裡是{{pet_name}}平常的樣子。'), say('收到別的王國送來的禮物以後，可以在這裡換造型。')],
         pages=[{'id': f'mirror-{u}', 'conditions': [cond(f'got_{u}', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
                 'trigger': 'action', 'once': False, 'actions': menu} for u in UNLOCKS])   # 拿到任何一件就出選單（條件只能「且」，所以每件一頁、內容一樣）
     # 換裝跨週目保留：進地圖時照 outfit 換回去（主角換人存在本輪存檔裡，跨週目只留得住變數）
@@ -424,7 +431,7 @@ def nursery():
         balloon('heart'), bubble('……這次就原諒你。'), setv('sulky', False)])
     guidance = [{'text': '牠在鬧脾氣，先陪牠玩（玩具箱）', 'eventId': 'toys', 'conditions': [cond('very_sulky', True)]},
                 {'text': '牠還在生氣，餵牠吃點東西', 'eventId': 'basket', 'conditions': [cond('sulky', True)]}] + [
-                {'text': '有遠方送來的禮物', 'eventId': 'gift', 'conditions': [cond(f'cross_{k}', 'true'), cond(f'got_{k}', True, 'neq')]} for k, *_ in CROSS] + [
+                {'text': '有遠方送來的禮物', 'eventId': 'gift', 'conditions': [cond('gift_waiting', True)]}] + [   # 每件一條會超過上限 16 條，改由 gift_wait 事件設旗標
                 {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond('mirror_new', True)]},
                 {'text': '成年禮：從門口出發去競技場', 'eventId': 'door', 'conditions': [cond('invited', True), cond('adult', True, 'neq')]}] + [   # 每套各一條會超過任務提示上限 16 條
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
@@ -433,7 +440,7 @@ def nursery():
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
                      'tiles': ['kn-dungeon:0' if (i % W, i // W) in walls() else None for i in range(W * H)]}],
-         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases + [invite, door] + daily + mirror_subs, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
+         'events': [hero, intro, journal, clock, cap, floor, hungry, basket, toys, poop_timer, welcome, sulk, very, makeup_play, makeup_eat, gift, mirror] + restores + poops + grows + [hint] + bases + [invite, door] + daily + mirror_subs + gift_wait, 'hp': 100, 'hpVariable': 'rpgHp', 'bagVariable': 'inventory', 'stateVariable': 'rpgState',
          'hideDesktopControls': False, 'combat': 'none', 'view': {'mode': '2d', 'tilt': 48, 'zoom': 1, 'depthOfField': 0, 'atmosphere': 'day'},
          'picture': {'url': ART['nursery']}, 'guidance': guidance,
          'environment': {'weather': 'clear', 'intensity': 0, 'darkness': 0, 'shake': 0, 'lights': [],

@@ -4,6 +4,7 @@ import subprocess, sys, pathlib, concurrent.futures as cf
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GEN = pathlib.Path.home() / '.claude/skills/codex-imagegen/codex-imagegen.sh'
 # 定錨的來源都是 repo 裡的 webp，產圖時才轉成 png 放進 art/raw/_ref（codex 吃 png 最穩；art/raw 不進 git）
+SHEEP_ART = 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/'
 TAOYUAN = pathlib.Path.home() / 'larch-taoyuan'   # 聯動造型照《三結義》的兵器對照表與三姊妹定錨（只當參考，不進本 repo）
 REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style-test-1.webp', 'slime': 'assets/concept/sprite-raw-green.webp',
            'weapons': TAOYUAN / 'buchan/cg_v/sheet_weapons_yuanmen_v2.webp', 'liubei': TAOYUAN / 'cast/anchor_liubei.webp',
@@ -14,7 +15,9 @@ REF_SRC = {'scene': 'assets/cover/cover-v3.webp', 'style': 'assets/concept/style
            'lubu_baihua': TAOYUAN / 'cast/lubu/百花戰甲_raw.webp', 'lubu_heijin': TAOYUAN / 'buchan/cg_v/anchor_lubu_flatboots_2_v2.webp', 'zhangfei': TAOYUAN / 'cast/anchor_zhangfei.webp',
            # 香布纏另外三件（#5）：兵器用原作的道具圖示（buchan/items.py 產的），衣服用素材庫選定造型的 Q 版
            'w_weixu': TAOYUAN / 'buchan/items_raw/w-weixu_v1.webp', 'w_quan': TAOYUAN / 'buchan/items_raw/w-quan_v1.webp', 'w_xiang': TAOYUAN / 'buchan/items_raw/w-xiang_v1.webp',
-           'weixu': TAOYUAN / 'buchan/cg_v/qa_weixu_1_v2.webp', 'quan': TAOYUAN / 'buchan/cg_v/qa_quan16_10_v2.webp', 'xiang': TAOYUAN / 'buchan/cg_v/qa_xiang_2_v2.webp'}
+           'weixu': TAOYUAN / 'buchan/cg_v/qa_weixu_1_v2.webp', 'quan': TAOYUAN / 'buchan/cg_v/qa_quan16_10_v2.webp', 'xiang': TAOYUAN / 'buchan/cg_v/qa_xiang_2_v2.webp',
+           # 《綿羊日常》（陳怡珊）的小羊與羊毛團：別人的圖，產圖時才從原作素材網址抓，不進本 repo
+           'lamb': SHEEP_ART + '1792863238189_____________.png', 'yarn': SHEEP_ART + '1792899443965________________.png'}
 REF = {k: f'art/raw/_ref/{k}.png' for k in REF_SRC}
 REF.update({f'form-{n}': f'art/raw/form-{n}.png' for n in ('prince', 'hime')})   # 成年禮 CG 用分化後的樣子當定錨
 REF.update({f'raw-{n}': f'art/raw/outfit-{n}.png' for n in ('lubu-baihua', 'liubei', 'guanyu', 'zhangfei', 'diaochan', 'weixu', 'quan', 'xiang')})   # 徽章改圖用作者認可過的原圖
@@ -25,7 +28,12 @@ def refs_ready():
     (ROOT / 'art/raw/_ref').mkdir(parents=True, exist_ok=True)
     for k, src in REF_SRC.items():
         if (ROOT / REF[k]).exists(): continue
-        im = Image.open(ROOT / src).convert('RGB')
+        if isinstance(src, str) and src.startswith('http'):
+            import io, urllib.request
+            im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(src, headers={'User-Agent': 'Mozilla/5.0'})).read())).convert('RGBA')
+            im = Image.alpha_composite(Image.new('RGBA', im.size, 'white'), im).convert('RGB')   # 透明底鋪白，codex 吃不透明的圖
+        else:
+            im = Image.open(ROOT / src).convert('RGB')
         if k == 'liubei_pose': im = im.crop((0, 0, im.width * 2 // 5, im.height))   # 《無雙》三英海報只取左邊的劉備
         im.save(ROOT / REF[k])
 
@@ -101,6 +109,12 @@ JOBS = {
                      'warm tea-brown eyes, a gentle quiet smile. No jewelry. '
                      'Weapon: the iron scissors exactly as in image 3: Han dynasty spring scissors made of one bent iron strip, a round ring at the end wrapped with hemp cord, '
                      'TWO flat dark iron blades clearly visible as a pair, slightly open in a narrow V so they read as scissors (not a knife). Held upright by one nub hand beside the body, blades pointing up, ring at the bottom. ' + ROUND + plate('#00FF00', 'green')),
+    'outfit-sheep': (['slime', 'lamb', 'yarn'], OUTFIT + 'Costume of the little lamb from image 2 (a round fluffy apricot-orange wool sheep with curled horns) turned into a cute slime outfit: '
+                     'a soft fluffy hooded wool cape of curly apricot-orange and cream fleece wrapped around the body like a cloud, the hood resting on top of the round dome '
+                     'with two small curled ram horns in pale apricot on both sides of the hood, a little fringe of curly wool around the face, '
+                     'the pearl-white face stays clearly visible with the same star-pupil eyes and rosy blush. No weapon. '
+                     'Instead one nub hand holds up the wool ball from image 3 beside the body: a fluffy cream wool ball loosely wrapped with an apricot-orange yarn strand. '
+                     'Warm, soft, cozy. ' + ROUND + plate('#00FF00', 'green')),   # 2026-10-29 作者：《綿羊日常》羊毛團聯動，王子姬多一套羊羊造型
     # 姓氏玉珮：縮到地圖大小只認得出「奶白圓球＋大兵器」，作者要一個明顯的標誌；大字胸章作者嫌廉價，2026-10-08 改成腰間垂掛的雕花玉珮
     **{f'pendant-{n}': ([f'raw-{n}'], 'Edit image 1. Keep EVERYTHING exactly the same: the slime, face, costume, hair, weapon, pose, colors, framing, size and the flat '
                         f'background color. Only ADD one elegant noble pendant hanging from the front center of the waist belt: a small round {mat} disc pendant '

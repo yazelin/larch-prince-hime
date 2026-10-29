@@ -32,7 +32,7 @@ LUBU = 'baihua'   # 呂布造型：baihua 百花戰袍／heijin 黑金戰甲
 # 造型小人身體（奶白圓頂在眼睛那一列）的寬度與中心 x，量的是去背後的 pendant-*-cut.png（玉珮版沒動構圖，跟 outfit-*-cut.png 一樣；1254px）。
 # ponytail: 手量的校正表；自動量會被兵器桿、髮繩、披風干擾（試過兩種都差到 3 成）。重產哪張就重量哪張
 BODY_PX = {'lubu-baihua': (585, 580), 'lubu-heijin': (540, 520), 'liubei': (640, 588), 'guanyu': (581, 608), 'zhangfei': (572, 570), 'diaochan': (600, 615),
-           'weixu': (607, 643), 'quan': (583, 644), 'xiang': (646, 651)}   # 呂荃右半身被頭髮蓋住，寬度照眼距推的
+           'weixu': (607, 643), 'quan': (583, 644), 'xiang': (646, 651), 'sheep': (560, 692)}   # 小羊的身體被羊毛帽蓋住，臉露出 485，照眼距抓 560；呂荃右半身被頭髮蓋住，寬度照眼距推的
 # 玉珮圓盤（圓心 x、y、半徑），量的是 pendant-*-cut.png；翻面時把這一圈換回沒翻過的，字才不會變鏡像字
 BADGE = {'lubu-baihua': (612, 1058, 53), 'liubei': (594, 991, 58), 'guanyu': (572, 1063, 52), 'zhangfei': (617, 1027, 45), 'diaochan': (707, 877, 42),
          'weixu': (598, 1018, 56), 'quan': (642, 1066, 44), 'xiang': (599, 1014, 96)}
@@ -161,7 +161,7 @@ def main():
     # 聯動造型小人：關羽身上有綠也有紅（綠幕、洋紅幕都會撞色），關羽與劉備（綠甲）用藍幕；呂布兩套都產，LUBU 選哪套
     cuts = {}
     for name, key in (('lubu-baihua', 'green'), ('lubu-heijin', 'green'), ('liubei', '#0000FF'), ('guanyu', '#0000FF'), ('zhangfei', 'green'), ('diaochan', 'green'),
-                      ('weixu', 'green'), ('quan', '#0000FF'), ('xiang', 'green')):   # 呂荃穿綠又帶粉，用藍幕
+                      ('weixu', 'green'), ('quan', '#0000FF'), ('xiang', 'green'), ('sheep', 'green')):   # 呂荃穿綠又帶粉，用藍幕
         raw = RAW / f'pendant-{name}.png'   # 加了姓氏玉珮的版本（沒有就用原圖，例如黑金呂布）
         if not raw.exists(): raw = RAW / f'outfit-{name}.png'
         if not raw.exists(): print('缺', raw.name); continue
