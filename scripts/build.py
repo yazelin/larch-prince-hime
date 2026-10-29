@@ -435,7 +435,8 @@ def nursery():
                 {'text': '去穿衣鏡換上新造型', 'eventId': 'mirror', 'conditions': [cond('mirror_new', True)]},
                 {'text': '成年禮：從門口出發去競技場', 'eventId': 'door', 'conditions': [cond('invited', True), cond('adult', True, 'neq')]}] + [   # 每套各一條會超過任務提示上限 16 條
                 {'text': '肚子餓了，去點心籃', 'eventId': 'basket', 'conditions': [cond('hunger', HUNGRY_AT, 'gte')]}] + [
-                {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS]
+                {'text': '有黃金便便，去撿起來', 'eventId': k, 'conditions': [cond(k, True)]} for k in POOP_CELLS] + [
+                {'text': '去王城中央廣場找朋友：從門口出發', 'eventId': 'door', 'conditions': [cond('adult', True)]}]   # 門口在最底排，引擎把貼近畫面底邊的標記藏起來，成年後只能靠這條帶路
     m = {'version': 1, 'name': '皇家育嬰室', 'width': W, 'height': H, 'tileSize': 48,
          'tilesets': [{'id': 'kn-dungeon', 'name': '地城', 'url': 'https://pub-4b20b43f5acf4dfaa3f6ab842daa51cf.r2.dev/2d3b0242-9a6d-4051-9825-46aa4efd064a/larch/built-in-assets/packs/kenney-rpg/tilesets/1790278984532_tiny-dungeon.png', 'tileSize': 16, 'columns': 12, 'rows': 11}],
          'layers': [{'id': 'walk', 'name': '通行設定', 'visible': False, 'locked': False, 'collision': True, 'damage': 0, 'above': False,
