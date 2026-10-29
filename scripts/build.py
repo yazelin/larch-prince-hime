@@ -212,10 +212,8 @@ _aid = itertools.count(1)
 def act(kind, **kw):
     a = {'id': f'a{next(_aid)}', 'kind': kind, 'text': '', 'cardId': '', 'itemId': '', 'itemName': '', 'variable': '', 'value': '', 'amount': 1}
     a.update(kw); return a
-def say(t, speaker='narrator', pres='bubble'):   # 地圖上的話一律用泡泡框，掛在寵物頭上（2026-10-08 作者：底部文字改泡泡）；who 沒寫會掛在觸發的事件上，自動事件放在牆格會飄到牆上
+def say(t, speaker='narrator', pres='bubble'):   # 地圖上的話一律用泡泡框，掛在寵物頭上（2026-10-08 作者：底部文字改泡泡）；旁白也看 who='hero'（Larch 2026-10-29 加的，舊引擎會掛在觸發的牆格事件上）
     return act('dialogue', text=t, presentation=pres, speaker=speaker, who='hero')
-def note(t):   # 放在牆格的條件／自動事件的旁白：Larch 現在旁白泡泡一律掛在觸發的事件上（不看 who），會飄到牆上被切掉 → 改底部文字框（2026-10-29 作者選）
-    return say(t, pres='text')
 def setv(k, v): return act('variable', variable=k, value=str(v).lower() if isinstance(v, bool) else str(v))
 def waits(ms):   # wait 步驟上限 9999 毫秒，長的等待拆成幾段
     return [act('wait', amount=min(9999, ms - i)) for i in range(0, ms, 9999)]
@@ -370,7 +368,7 @@ def nursery():
     def mirror_sub(g, us, have, cell):
         cs = [cond('mirror_menu', g)] + [cond(f'got_{u}', True, 'eq' if u in have else 'neq') for u in us]
         if not have:
-            return ev(f'mm-{g}-none', *cell, trigger='condition', conditions=cs, actions=[setv('mirror_menu', ''), note(f'還沒收到{dict((a, c) for a, _, c, _ in GROUPS)[g]}送來的{"禮物" if g == "sheep" else "兵器"}。')])
+            return ev(f'mm-{g}-none', *cell, trigger='condition', conditions=cs, actions=[setv('mirror_menu', ''), say(f'還沒收到{dict((a, c) for a, _, c, _ in GROUPS)[g]}送來的{"禮物" if g == "sheep" else "兵器"}。')])
         opts = [{'id': f'o-{o}', 'label': v[1], 'actions': wear(o)} for o, v in OUTFITS.items() if v[3] in have] + [{'id': 'keep', 'label': '不換', 'actions': []}]
         return ev(f'mm-{g}-' + '-'.join(have), *cell, trigger='condition', conditions=cs,
                   actions=[setv('mirror_menu', ''), act('choice', text='要換哪一套？', speaker='narrator', choice={'cancel': 'keep', 'options': opts})])
@@ -389,17 +387,17 @@ def nursery():
     # 分化：親密度到 GROW_AT，傾向正→小王子、負→小公主、打平照最後一次玩的遊戲（還沒玩過就等）。事件放在第 1 列（新舊地圖都是牆）
     grow_c = [cond('form', ''), cond('affection', GROW_AT, 'gte'), cond('days', GROW_DAYS, 'gte')]
     grow = lambda id, x, f, cs: ev(id, x, 1, trigger='condition', conditions=grow_c + cs, actions=[
-        balloon('music'), say('噗……啾？', speaker='player'), note('{{pet_name}}全身亮起柔柔的光，光裡傳來小小的、很開心的笑聲。'),
-        setv('form', f), setv('base_ok', False), note(f'光散開的時候，{{{{pet_name}}}}變成了一位{FORMS[f][1]}。'), balloon('heart'),
-        note('穿衣鏡的「平常」也換成了新的樣子。聯動造型照樣穿得上。')])
+        balloon('music'), say('噗……啾？', speaker='player'), say('{{pet_name}}全身亮起柔柔的光，光裡傳來小小的、很開心的笑聲。'),
+        setv('form', f), setv('base_ok', False), say(f'光散開的時候，{{{{pet_name}}}}變成了一位{FORMS[f][1]}。'), balloon('heart'),
+        say('穿衣鏡的「平常」也換成了新的樣子。聯動造型照樣穿得上。')])
     grows = [grow('grow-p1', 1, 'prince', [cond('lean', 1, 'gte')]), grow('grow-p2', 2, 'prince', [cond('lean', 0), cond('last_play', 'prince')]),
              grow('grow-h1', 3, 'hime', [cond('lean', -1, 'lte')]), grow('grow-h2', 4, 'hime', [cond('lean', 0), cond('last_play', 'hime')])]
     hint = ev('grow-hint', 5, 1, trigger='condition', conditions=[cond('form', ''), cond('grow_hint', True, 'neq'), cond('affection', GROW_HINT, 'gte'), cond('days', GROW_DAYS, 'gte')], actions=[
-        say('……啾。身體好像熱熱的。', speaker='player'), note('{{pet_name}}最近很常發呆，好像快要長大了。'), setv('grow_hint', True)])
+        say('……啾。身體好像熱熱的。', speaker='player'), say('{{pet_name}}最近很常發呆，好像快要長大了。'), setv('grow_hint', True)])
     # 成年禮：分化後親密度到 ADULT_AT，使者送邀請；從門口出發（門口在地圖最下面正中的地墊上，寵物站在上面一格往下按）
     invite = ev('invite', 10, 1, trigger='condition', conditions=[cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('invited', True, 'neq'), cond('affection', ADULT_AT, 'gte'), cond('days', ADULT_DAYS, 'gte')], actions=[
-        balloon('exclamation'), note('門口傳來敲門聲。國王的使者送來一封信，封蠟上是那頂小金冠。'),
-        note('「{{pet_name}}的成年禮，在競技場舉行。準備好了，就從育嬰室門口出發。」'), setv('invited', True)])
+        balloon('exclamation'), say('門口傳來敲門聲。國王的使者送來一封信，封蠟上是那頂小金冠。'),
+        say('「{{pet_name}}的成年禮，在競技場舉行。準備好了，就從育嬰室門口出發。」'), setv('invited', True)])
     door = ev('door', 11, 17, solid=True, marker={'label': '門口', 'kind': 'talk'}, actions=[say('門外是王宮的長廊。國王說過，沒事不要帶牠亂跑。')], pages=[
         {'id': 'go', 'conditions': [cond('invited', True), cond('adult', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
          'trigger': 'action', 'once': False, 'actions': [act('choice', text='要出發去競技場嗎？', speaker='narrator', choice={'cancel': 'wait', 'options': [
@@ -414,18 +412,18 @@ def nursery():
             ev(f'base-{f}-now', 8 + i, 1, trigger='condition', conditions=[cond('outfit', ''), cond('form', f), cond('base_ok', True, 'neq')],
                actions=[act('hero', value=aid), setv('base_ok', True)]) for i, (f, (aid, _, _)) in enumerate(FORMS.items())]
     daily = [ev(f'daily-{i}', 10 + i, 1, trigger='condition', conditions=[cond('daily_pick', i), cond('sulky', True, 'neq')],
-                actions=[setv('daily_pick', 0), *waits(1500), balloon(b), *[say(t[1], speaker='player') if isinstance(t, tuple) else note(t) for t in lines]])
+                actions=[setv('daily_pick', 0), *waits(1500), balloon(b), *[say(t[1], speaker='player') if isinstance(t, tuple) else say(t) for t in lines]])
              for i, (b, lines) in enumerate(DAILY, 1)]   # 鬧脾氣時先不演，和好後條件成立才演
     away = lambda lo, hi=None: [cond('away_minutes', lo, 'gte')] + ([cond('away_minutes', hi, 'lte')] if hi else [])
     bubble = lambda t: say(t, speaker='player', pres='bubble')
     welcome = ev('back-hi', 6, 0, trigger='condition', conditions=away(AWAY_HI, AWAY_SULK - 1), actions=[
         balloon('heart'), bubble('你回來了！'), setv('away_minutes', 0)])
     sulk = ev('back-sulk', 7, 0, trigger='condition', conditions=away(AWAY_SULK, AWAY_VERY - 1), actions=[
-        balloon('anger'), bubble('本宮等很久了。'), note('{{pet_name}}把臉轉開。餵牠吃點東西，大概就會和好。'),
+        balloon('anger'), bubble('本宮等很久了。'), say('{{pet_name}}把臉轉開。餵牠吃點東西，大概就會和好。'),
         setv('fed', False), setv('sulky', True), setv('away_minutes', 0)])
     very = ev('back-very', 8, 0, trigger='condition', conditions=away(AWAY_VERY), actions=[
-        balloon('anger'), note('{{pet_name}}縮在房間角落，背對著你，怎麼叫都不回頭。'),
-        note('地上有一張歪歪扭扭的紙條：「本宮不理你了。」'), note('先陪牠玩一下吧。'),
+        balloon('anger'), say('{{pet_name}}縮在房間角落，背對著你，怎麼叫都不回頭。'),
+        say('地上有一張歪歪扭扭的紙條：「本宮不理你了。」'), say('先陪牠玩一下吧。'),
         setv('played', False), setv('fed', False), setv('very_sulky', True), setv('sulky', True), setv('away_minutes', 0)])
     makeup_play = ev('makeup-play', 9, 0, trigger='condition', conditions=[cond('very_sulky', True), cond('played', True)], actions=[
         bubble('……好啦，陪你玩一下而已。'), setv('very_sulky', False), setv('fed', False)])
