@@ -398,12 +398,13 @@ def nursery():
     invite = ev('invite', 10, 1, trigger='condition', conditions=[cond('form', '', 'neq'), cond('adult', True, 'neq'), cond('invited', True, 'neq'), cond('affection', ADULT_AT, 'gte'), cond('days', ADULT_DAYS, 'gte')], actions=[
         balloon('exclamation'), say('門口傳來敲門聲。國王的使者送來一封信，封蠟上是那頂小金冠。'),
         say('「{{pet_name}}的成年禮，在競技場舉行。準備好了，就從育嬰室門口出發。」'), setv('invited', True)])
+    # 收到邀請後門口改成碰到就問（作者：走到底端要自動跳出詢問，不用再按互動鍵）；沒邀請前維持按鍵，免得每次撞到門都跳那句
     door = ev('door', 11, 17, solid=True, marker={'label': '門口', 'kind': 'talk'}, actions=[say('門外是王宮的長廊。國王說過，沒事不要帶牠亂跑。')], pages=[
         {'id': 'go', 'conditions': [cond('invited', True), cond('adult', True, 'neq')], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
-         'trigger': 'action', 'once': False, 'actions': [act('choice', text='要出發去競技場嗎？', speaker='narrator', choice={'cancel': 'wait', 'options': [
+         'trigger': 'touch', 'once': False, 'actions': [act('choice', text='要出發去競技場嗎？', speaker='narrator', choice={'cancel': 'wait', 'options': [
              {'id': 'go', 'label': '出發', 'actions': [act('jump', cardId='a-arena')]}, {'id': 'wait', 'label': '再等一下', 'actions': []}]})]},
         {'id': 'done', 'conditions': [cond('adult', True)], 'actor': 'none', 'sprite': INVISIBLE, 'movement': 'still', 'solid': True,
-         'trigger': 'action', 'once': False, 'actions': [act('choice', text='要去王城中央廣場走走嗎？', speaker='narrator', choice={'cancel': 'stay', 'options': [
+         'trigger': 'touch', 'once': False, 'actions': [act('choice', text='要去王城中央廣場走走嗎？', speaker='narrator', choice={'cancel': 'stay', 'options': [
              {'id': 'go', 'label': '去廣場', 'actions': [act('jump', cardId='m-plaza', arrive={'x': 24, 'y': 32, 'direction': 'up'})]},
              {'id': 'stay', 'label': '待在育嬰室', 'actions': []}]})]}])
     # 平常的樣子：進地圖時（auto）與從穿衣鏡換回平常時（condition，看 base_ok）都換成分化後那隻
