@@ -490,7 +490,7 @@ def plaza():
                 for i, (x, y) in enumerate(cells)]
     pick = lambda id, lines: act('random', random={'min': 1, 'max': len(lines), 'options': [
         {'id': f'{id}{i}', 'from': i, 'to': i, 'actions': [say(t)]} for i, t in enumerate(lines, 1)]})
-    notice = spot('notice', '公告欄', [(x, 31) for x in range(15, 19)], actions=[pick('nt', [
+    notice = spot('notice', '公告欄', [(x, 31) for x in range(15, 19)], actions=[say('廣場告示：按 T 聊天、按 Y 做表情、按 F 看附近的玩家，手機點左下角的按鈕。在玩家名單裡可以加好友、私訊，也可以邀請對方對戰；對戰輸了不影響平常養育。'), pick('nt', [
         '公告欄上貼著「本月成年禮名單」，{{pet_name}}的名字也在上面，旁邊畫了一頂小金冠。',
         '王都消息：「生命聖樹今年又高了一截，請勿攀爬。」',
         '尋物啟事：「國王的白鬍子梳不見了，撿到請送回王宮。」底下有人畫了一把梳子。'])])
@@ -605,7 +605,7 @@ def build():
     # 多人連線只開在王城中央廣場（育嬰室放 soloMaps）；對戰數值在 STATS（#1）。push_larch 整份覆寫這個插件設定，所以連線設定也在這裡管
     rpg['online'] = json.dumps({'version': 1, 'enabled': True, 'access': 'everyone', 'channelMode': 'auto', 'channelList': [{'id': 'ch-1', 'name': '王城', 'icon': '🌲'}],
         'channelSize': 50, 'chat': 'free', 'filter': True, 'blockedWords': [], 'phrases': ['你好！', '謝謝！', '一起走吧', '等我一下', '好喔', '哈哈哈', '加油！', '掰掰～'],
-        'nameTags': True, 'soloMaps': ['m-nursery'], 'welcome': '這裡是王城中央廣場。按 T 聊天、按 Y 做表情，跟其他王族打聲招呼吧。',
+        'nameTags': True, 'soloMaps': ['m-nursery'], 'welcome': '這裡是王城中央廣場。按 T 聊天、按 Y 做表情、按 F 看附近的玩家（手機點左下角的按鈕），在玩家名單裡可以加好友、私訊、邀請對戰。',
         'hud': {'corner': 'bl', 'x': 1.5, 'y': 2.5, 'scale': 1, 'chip': True, 'chat': True, 'emote': True, 'friends': True, 'log': True},
         'social': {'friends': True, 'dm': True, 'teleport': 'off', 'duel': True, 'duelParty': False}}, ensure_ascii=False, separators=(',', ':'))
     rpg['lobby'] = json.dumps({'version': 1, 'looks': [], 'colors': True, 'eyebrow': '多人世界 · ONLINE', 'title': '和其他旅人一起冒險',
