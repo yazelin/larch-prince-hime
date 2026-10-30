@@ -542,10 +542,10 @@ SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
     ('bubble', '泡泡撞擊', 'bolt', 'spark', 14, 5), ('sword', '木劍突刺', 'bolt', 'spark', 22, 8), ('cape', '披風旋風', 'nova', 'ice', 30, 14),
     ('star', '星星餅乾', 'bolt', 'holy', 18, 6), ('tea', '一杯熱紅茶', 'heal', 'heal', 28, 10),
     ('twin', '雙股連斬', 'bolt', 'spark', 26, 9),
-    ('dragon', '青龍偃月斬', 'bolt', 'ice', 30, 10), ('roar', '長坂怒吼', 'nova', 'quake', 28, 11),
+    ('dragon', '青龍偃月斬', 'bolt', 'ice', 33, 10), ('roar', '長坂怒吼', 'nova', 'quake', 28, 11),
     ('ring', '環首刀劈', 'bolt', 'flame', 24, 8), ('arrow', '小木弓射', 'bolt', 'holy', 20, 5), ('bandage', '剪布包紮', 'heal', 'heal', 24, 8),
     ('wool', '羊毛衝撞', 'bolt', 'spark', 20, 6),
-    ('halberd', '畫戟突刺', 'bolt', 'spark', 22, 8), ('sweep', '方天橫掃', 'nova', 'ice', 30, 14)]   # 呂布：數值同木劍突刺、披風旋風，只換名字   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
+    ('halberd', '畫戟突刺', 'bolt', 'spark', 22, 8), ('sweep', '方天橫掃', 'nova', 'ice', 30, 14)]   # 呂布：數值同木劍突刺、披風旋風，只換名字   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重（33：贏呂布百花、平黑金，作者拍板）、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 13, 'defense': 10}, ['bubble', 'star', 'tea']),
