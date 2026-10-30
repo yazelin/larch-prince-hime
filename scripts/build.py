@@ -546,10 +546,11 @@ STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea']),
          'sheep': ({'mp': 20, 'attack': 12, 'defense': 15}, ['bubble']),
-         'lubu': ({'mp': 20, 'attack': 17, 'defense': 9}, ['bubble', 'sword', 'cape']),
-         'heijin': ({'mp': 20, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
-         'liubei': ({'mp': 20, 'attack': 14, 'defense': 9}, ['bubble', 'twin'])}
-OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15、劉備雙股連斬；其他造型用基本數值
+         'lubu': ({'mp': 30, 'attack': 17, 'defense': 9}, ['bubble', 'sword', 'cape']),
+         'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
+         'liubei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'twin']),
+         'guanyu': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble']), 'zhangfei': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble'])}   # 關張先只加 MP，其他等作者定
+OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei', 'guanyu': 'guanyu', 'zhangfei': 'zhangfei'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15、劉備雙股連斬、劉關張呂布 MP 30；其他造型用基本數值
 
 def database():
     def stats(kind):
