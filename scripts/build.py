@@ -537,13 +537,15 @@ def clock_plugin():
 
 
 # 對戰（#1）：引擎拿「目前主角」資料庫角色的 growth 當數值、skills 當技能（對戰是雙方同時選攻擊／技能／防禦，不扣真血）。
-# HP 大家都 100（地圖上的血條不變）；小王子攻擊高、小公主魔力高。平常那隻與聯動造型用基本數值（造型是兩種共用的同一個角色）
+# HP 大家都 100（地圖上的血條不變）；小王子攻擊高、小公主魔力高。平常那隻用基本數值；造型的數值看 OUTFIT_STATS，不分穿的是小王子還是小公主（造型是兩種共用的同一個角色）
 SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
     ('bubble', '泡泡撞擊', 'bolt', 'spark', 14, 5), ('sword', '木劍突刺', 'bolt', 'spark', 22, 8), ('cape', '披風旋風', 'nova', 'ice', 30, 14),
     ('star', '星星餅乾', 'bolt', 'holy', 18, 6), ('tea', '一杯熱紅茶', 'heal', 'heal', 28, 10)]
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
-         'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea'])}
+         'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea']),
+         'sheep': ({'mp': 20, 'attack': 12, 'defense': 15}, ['bubble'])}
+OUTFIT_STATS = {'lubu': 'prince', 'heijin': 'prince', 'diaochan': 'hime', 'sheep': 'sheep'}   # 2026-10-30 作者：呂布兩套照小王子、貂蟬照小公主、小綿羊防禦 15；其他造型用基本數值
 
 def database():
     def stats(kind):
@@ -556,7 +558,7 @@ def database():
                 'kit': 'none', 'rig': 'slime', 'joinVariable': '', **stats(kind), **({'speed': 2} if LAYERED else {})}   # 細格一步只有半格，速度加倍手感不變
     # 造型＝另一個資料庫角色，換裝用 hero 步驟整個換掉（名字一樣叫王子姬）
     return {'version': 1, 'heroId': 'ph', 'leadSwitch': False,
-            'actors': [actor('ph', 'slime')] + [actor(v[0], v[2], 'npc') for v in OUTFITS.values()] + [actor(v[0], v[2], 'npc', f) for f, v in FORMS.items()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
+            'actors': [actor('ph', 'slime')] + [actor(v[0], v[2], 'npc', OUTFIT_STATS.get(k, 'base')) for k, v in OUTFITS.items()] + [actor(v[0], v[2], 'npc', f) for f, v in FORMS.items()]}   # 造型角色要 npc：party 又沒 joinVariable 會被當成已同行的隊友
 
 def build():
     p = json.loads((ROOT / 'skeleton/project.json').read_text())
