@@ -543,7 +543,7 @@ SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
     ('star', '星星餅乾', 'bolt', 'holy', 18, 6), ('tea', '一杯熱紅茶', 'heal', 'heal', 28, 10),
     ('twin', '雙股連斬', 'bolt', 'spark', 26, 9),
     ('dragon', '青龍偃月斬', 'bolt', 'ice', 30, 10), ('roar', '長坂怒吼', 'nova', 'quake', 28, 11),
-    ('ring', '環首刀劈', 'bolt', 'flame', 24, 8), ('arrow', '小木弓射', 'bolt', 'holy', 22, 7), ('bandage', '剪布包紮', 'heal', 'heal', 24, 8)]   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
+    ('ring', '環首刀劈', 'bolt', 'flame', 24, 8), ('arrow', '小木弓射', 'bolt', 'holy', 20, 5), ('bandage', '剪布包紮', 'heal', 'heal', 24, 8)]   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 13, 'defense': 10}, ['bubble', 'star', 'tea']),
@@ -552,8 +552,8 @@ STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
          'liubei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'twin']),
          'guanyu': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'dragon']), 'zhangfei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'roar']),
-         'weixu': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'ring']), 'quan': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'arrow']),
-         'xiang': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'bandage'])}   # 作者：各一招專屬、MP 30，攻防維持基本   # 作者：關張至少跟劉備一樣，各一招專屬
+         'weixu': ({'mp': 20, 'attack': 15, 'defense': 8}, ['bubble', 'ring']), 'quan': ({'mp': 35, 'attack': 12, 'defense': 8}, ['bubble', 'arrow']),
+         'xiang': ({'mp': 30, 'attack': 12, 'defense': 10}, ['bubble', 'bandage'])}   # 作者：各一招專屬；魏續蠻力（攻高 MP 少）、呂荃連射（便宜箭 MP 多）、嚴湘耐打（防 10 會補），三人互剋   # 作者：關張至少跟劉備一樣，各一招專屬
 OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei', 'guanyu': 'guanyu', 'zhangfei': 'zhangfei', 'weixu': 'weixu', 'quan': 'quan', 'xiang': 'xiang'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 11（15 時對戰模擬全勝）、劉備雙股連斬、劉關張呂布 MP 30、關張數值同劉備各一招專屬、魏續呂荃嚴湘各一招專屬；其他造型用基本數值
 
 def database():
