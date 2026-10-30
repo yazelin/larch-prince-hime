@@ -544,13 +544,14 @@ SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
     ('twin', '雙股連斬', 'bolt', 'spark', 26, 9),
     ('dragon', '青龍偃月斬', 'bolt', 'ice', 30, 10), ('roar', '長坂怒吼', 'nova', 'quake', 28, 11),
     ('ring', '環首刀劈', 'bolt', 'flame', 24, 8), ('arrow', '小木弓射', 'bolt', 'holy', 20, 5), ('bandage', '剪布包紮', 'heal', 'heal', 24, 8),
-    ('wool', '羊毛衝撞', 'bolt', 'spark', 20, 6)]   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
+    ('wool', '羊毛衝撞', 'bolt', 'spark', 20, 6),
+    ('halberd', '畫戟突刺', 'bolt', 'spark', 22, 8), ('sweep', '方天橫掃', 'nova', 'ice', 30, 14)]   # 呂布：數值同木劍突刺、披風旋風，只換名字   # 魏續、呂荃、嚴湘（嚴湘走回復）   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 13, 'defense': 10}, ['bubble', 'star', 'tea']),
          'sheep': ({'mp': 20, 'attack': 12, 'defense': 11}, ['bubble', 'wool']),
-         'lubu': ({'mp': 30, 'attack': 17, 'defense': 9}, ['bubble', 'sword', 'cape']),
-         'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
+         'lubu': ({'mp': 30, 'attack': 17, 'defense': 9}, ['bubble', 'halberd', 'sweep']),
+         'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'halberd', 'sweep']),
          'liubei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'twin']),
          'guanyu': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'dragon']), 'zhangfei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'roar']),
          'weixu': ({'mp': 20, 'attack': 15, 'defense': 8}, ['bubble', 'ring']), 'quan': ({'mp': 35, 'attack': 12, 'defense': 8}, ['bubble', 'arrow']),
