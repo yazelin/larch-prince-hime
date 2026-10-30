@@ -552,8 +552,8 @@ STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
          'liubei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'twin']),
          'guanyu': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'dragon']), 'zhangfei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'roar']),
-         'weixu': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble', 'ring']), 'quan': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble', 'arrow']),
-         'xiang': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble', 'bandage'])}   # 作者：各一招專屬，數值維持基本   # 作者：關張至少跟劉備一樣，各一招專屬
+         'weixu': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'ring']), 'quan': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'arrow']),
+         'xiang': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble', 'bandage'])}   # 作者：各一招專屬、MP 30，攻防維持基本   # 作者：關張至少跟劉備一樣，各一招專屬
 OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei', 'guanyu': 'guanyu', 'zhangfei': 'zhangfei', 'weixu': 'weixu', 'quan': 'quan', 'xiang': 'xiang'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15、劉備雙股連斬、劉關張呂布 MP 30、關張數值同劉備各一招專屬、魏續呂荃嚴湘各一招專屬；其他造型用基本數值
 
 def database():
