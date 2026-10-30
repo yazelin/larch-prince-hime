@@ -544,8 +544,10 @@ SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea']),
-         'sheep': ({'mp': 20, 'attack': 12, 'defense': 15}, ['bubble'])}
-OUTFIT_STATS = {'lubu': 'prince', 'heijin': 'prince', 'diaochan': 'hime', 'sheep': 'sheep'}   # 2026-10-30 作者：呂布兩套照小王子、貂蟬照小公主、小綿羊防禦 15；其他造型用基本數值
+         'sheep': ({'mp': 20, 'attack': 12, 'defense': 15}, ['bubble']),
+         'lubu': ({'mp': 20, 'attack': 17, 'defense': 9}, ['bubble', 'sword', 'cape']),
+         'heijin': ({'mp': 20, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape'])}
+OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15；其他造型用基本數值
 
 def database():
     def stats(kind):
