@@ -541,7 +541,8 @@ def clock_plugin():
 SKILLS = [  # 素材庫技能：id, 名稱, 形狀, 特效, 威力, 魔力
     ('bubble', '泡泡撞擊', 'bolt', 'spark', 14, 5), ('sword', '木劍突刺', 'bolt', 'spark', 22, 8), ('cape', '披風旋風', 'nova', 'ice', 30, 14),
     ('star', '星星餅乾', 'bolt', 'holy', 18, 6), ('tea', '一杯熱紅茶', 'heal', 'heal', 28, 10),
-    ('twin', '雙股連斬', 'bolt', 'spark', 26, 9)]   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
+    ('twin', '雙股連斬', 'bolt', 'spark', 26, 9),
+    ('dragon', '青龍偃月斬', 'bolt', 'ice', 30, 12), ('roar', '長坂怒吼', 'nova', 'quake', 28, 11)]   # 關羽單發最重、張飛 quake 會震畫面   # 劉備：引擎技能沒有「打幾下」，威力設成兩下加起來（2×13）
 STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'prince': ({'mp': 20, 'attack': 16, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'hime': ({'mp': 40, 'attack': 11, 'defense': 10}, ['bubble', 'star', 'tea']),
@@ -549,8 +550,8 @@ STATS = {'base': ({'mp': 20, 'attack': 12, 'defense': 8}, ['bubble']),
          'lubu': ({'mp': 30, 'attack': 17, 'defense': 9}, ['bubble', 'sword', 'cape']),
          'heijin': ({'mp': 30, 'attack': 16, 'defense': 10}, ['bubble', 'sword', 'cape']),
          'liubei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'twin']),
-         'guanyu': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble']), 'zhangfei': ({'mp': 30, 'attack': 12, 'defense': 8}, ['bubble'])}   # 關張先只加 MP，其他等作者定
-OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei', 'guanyu': 'guanyu', 'zhangfei': 'zhangfei'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15、劉備雙股連斬、劉關張呂布 MP 30；其他造型用基本數值
+         'guanyu': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'dragon']), 'zhangfei': ({'mp': 30, 'attack': 14, 'defense': 9}, ['bubble', 'roar'])}   # 作者：關張至少跟劉備一樣，各一招專屬
+OUTFIT_STATS = {'lubu': 'lubu', 'heijin': 'heijin', 'diaochan': 'hime', 'sheep': 'sheep', 'liubei': 'liubei', 'guanyu': 'guanyu', 'zhangfei': 'zhangfei'}   # 2026-10-30 作者：呂布照小王子再加一（百花攻、黑金防）、貂蟬照小公主、小綿羊防禦 15、劉備雙股連斬、劉關張呂布 MP 30、關張數值同劉備各一招專屬；其他造型用基本數值
 
 def database():
     def stats(kind):
